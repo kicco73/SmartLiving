@@ -19,7 +19,8 @@ class Welcome extends CI_Controller {
 	 */
 	public function index()
 	{
-		$this->load->view('welcome_message');
+		$table = $this->Fake_model->list_all();
+		$this->load->view('welcome_message', array("table" => $table));
 	}
 }
 

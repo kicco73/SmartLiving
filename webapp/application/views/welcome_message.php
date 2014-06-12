@@ -71,9 +71,14 @@
 
 	<div id="body">
 		<p>The page you are looking at is being generated dynamically by CodeIgniter.</p>
-
 		<p>If you would like to edit this page you'll find it located at:</p>
 		<code>application/views/welcome_message.php</code>
+
+		<?php
+		foreach($table as $row)
+			echo "<div> MA CIAO: ".$row->ciao."</div>";
+		?>
+			
 
 		<p>The corresponding controller for this page is found at:</p>
 		<code>application/controllers/welcome.php</code>

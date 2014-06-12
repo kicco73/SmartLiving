@@ -23,10 +23,9 @@ class Fake_model extends CI_Model {
 			return $result[0];
 	}
 	
-	function list_all($player) {
-		$this->db->from("skin")->where("product", $player->product);
+	function list_all() {
 		// FIXME order_by hardcoded
-		$skins = $this->db->order_by('it', 'asc')->get()->result();
+		$skins = $this->db->get("Ciao")->result();
 		return $skins;
 	}
 	
