@@ -62,6 +62,14 @@ extern uip_ds6_route_t uip_ds6_routing_table[];
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 
+struct resource {
+	char * name;
+	char * ip;
+	int value;
+};
+ 
+static struct resource rd[]={{.name="/dimmer", .ip="aaaa::2", .value=30},{.name="/light", .ip="aaaa::2", .value=300},{.name="/sound", .ip="aaaa::3", .value=10}}; 
+
 PROCESS(border_router_process, "Border router process");
 
 #if WEBSERVER==0
@@ -109,8 +117,7 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
 }
 AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 
-static const char *TOP = "<html><head><title>ContikiRPL</title></head><body>\n";
-static const char *BOTTOM = "</body></html>\n";
+
 #if BUF_USES_STACK
 static char *bufptr, *bufend;
 #define ADD(...) do {                                                   \
@@ -149,131 +156,18 @@ static
 PT_THREAD(generate_routes(struct httpd_state *s))
 {
   static int i;
-#if BUF_USES_STACK
-  char buf[256];
-#endif
-#if WEBSERVER_CONF_LOADTIME
-  static clock_time_t numticks;
-  numticks = clock_time();
-#endif
+  static char buf[256];
 
   PSOCK_BEGIN(&s->sout);
 
-  SEND_STRING(&s->sout, TOP);
-#if BUF_USES_STACK
-  bufptr = buf;bufend=bufptr+sizeof(buf);
-#else
-  blen = 0;
-#endif
-  ADD("Neighbors<pre>");
-  for(i = 0; i < UIP_DS6_NBR_NB; i++) {
-    if(uip_ds6_nbr_cache[i].isused) {
-
-#if WEBSERVER_CONF_NEIGHBOR_STATUS
-#if BUF_USES_STACK
-{char* j=bufptr+25;
-      ipaddr_add(&uip_ds6_nbr_cache[i].ipaddr);
-      while (bufptr < j) ADD(" ");
-      switch (uip_ds6_nbr_cache[i].state) {
-      case NBR_INCOMPLETE: ADD(" INCOMPLETE");break;
-      case NBR_REACHABLE: ADD(" REACHABLE");break;
-      case NBR_STALE: ADD(" STALE");break;      
-      case NBR_DELAY: ADD(" DELAY");break;
-      case NBR_PROBE: ADD(" NBR_PROBE");break;
-      }
+  int rd_size=sizeof(rd)/sizeof(rd[0]);
+	strcpy(buf,"[");	  
+	for(i=0;i<rd_size;i++){
+		sprintf(buf+strlen(buf),"{\"n\":\"%s\",\"v\":%d}%c",rd[i].name,rd[i].value,i+1<rd_size?',':']');
 }
-#else
-{uint8_t j=blen+25;
-      ipaddr_add(&uip_ds6_nbr_cache[i].ipaddr);
-      while (blen < j) ADD(" ");
-      switch (uip_ds6_nbr_cache[i].state) {
-      case NBR_INCOMPLETE: ADD(" INCOMPLETE");break;
-      case NBR_REACHABLE: ADD(" REACHABLE");break;
-      case NBR_STALE: ADD(" STALE");break;      
-      case NBR_DELAY: ADD(" DELAY");break;
-      case NBR_PROBE: ADD(" NBR_PROBE");break;
-      }
-}
-#endif
-#else
-      ipaddr_add(&uip_ds6_nbr_cache[i].ipaddr);
-#endif
+	SEND_STRING(&s->sout,buf);	  
+//******************************************************
 
-      ADD("\n");
-#if BUF_USES_STACK
-      if(bufptr > bufend - 45) {
-        SEND_STRING(&s->sout, buf);
-        bufptr = buf; bufend = bufptr + sizeof(buf);
-      }
-#else
-      if(blen > sizeof(buf) - 45) {
-        SEND_STRING(&s->sout, buf);
-        blen = 0;
-      }
-#endif
-    }
-  }
-  ADD("</pre>Routes<pre>");
-  SEND_STRING(&s->sout, buf);
-#if BUF_USES_STACK
-  bufptr = buf; bufend = bufptr + sizeof(buf);
-#else
-  blen = 0;
-#endif
-  for(i = 0; i < UIP_DS6_ROUTE_NB; i++) {
-    if(uip_ds6_routing_table[i].isused) {
-#if BUF_USES_STACK
-#if WEBSERVER_CONF_ROUTE_LINKS
-      ADD("<a href=http://[");
-      ipaddr_add(&uip_ds6_routing_table[i].ipaddr);
-      ADD("]/status.shtml>");
-      ipaddr_add(&uip_ds6_routing_table[i].ipaddr);
-      ADD("</a>");
-#else
-      ipaddr_add(&uip_ds6_routing_table[i].ipaddr);
-#endif
-#else
-#if WEBSERVER_CONF_ROUTE_LINKS
-      ADD("<a href=http://[");
-      ipaddr_add(&uip_ds6_routing_table[i].ipaddr);
-      ADD("]/status.shtml>");
-      SEND_STRING(&s->sout, buf); //TODO: why tunslip6 needs an output here, wpcapslip does not
-      blen = 0;
-      ipaddr_add(&uip_ds6_routing_table[i].ipaddr);
-      ADD("</a>");
-#else
-      ipaddr_add(&uip_ds6_routing_table[i].ipaddr);
-#endif
-#endif
-      ADD("/%u (via ", uip_ds6_routing_table[i].length);
-      ipaddr_add(&uip_ds6_routing_table[i].nexthop);
-      if(1 || (uip_ds6_routing_table[i].state.lifetime < 600)) {
-        ADD(") %lus\n", uip_ds6_routing_table[i].state.lifetime);
-      } else {
-        ADD(")\n");
-      }
-      SEND_STRING(&s->sout, buf);
-#if BUF_USES_STACK
-      bufptr = buf; bufend = bufptr + sizeof(buf);
-#else
-      blen = 0;
-#endif
-    }
-  }
-  ADD("</pre>");
-
-#if WEBSERVER_CONF_FILESTATS
-  static uint16_t numtimes;
-  ADD("<br><i>This page sent %u times</i>",++numtimes);
-#endif
-
-#if WEBSERVER_CONF_LOADTIME
-  numticks = clock_time() - numticks + 1;
-  ADD(" <i>(%u.%02u sec)</i>",numticks/CLOCK_SECOND,(100*(numticks%CLOCK_SECOND))/CLOCK_SECOND));
-#endif
-
-  SEND_STRING(&s->sout, buf);
-  SEND_STRING(&s->sout, BOTTOM);
 
   PSOCK_END(&s->sout);
 }
