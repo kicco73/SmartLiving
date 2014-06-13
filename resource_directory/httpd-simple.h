@@ -45,15 +45,19 @@
 /* The current internal border router webserver ignores the requested file name */
 /* and needs no per-connection output buffer, so save some RAM */
 #ifndef WEBSERVER_CONF_CFS_PATHLEN
-#define HTTPD_PATHLEN 2
+#define HTTPD_PATHLEN 32
 #else /* WEBSERVER_CONF_CFS_CONNS */
 #define HTTPD_PATHLEN WEBSERVER_CONF_CFS_PATHLEN
 #endif /* WEBSERVER_CONF_CFS_CONNS */
+
+#define GET 0
+#define POST 1
 
 struct httpd_state;
 typedef char (* httpd_simple_script_t)(struct httpd_state *s);
 
 struct httpd_state {
+	int method;
   struct timer timer;
   struct psock sin, sout;
   struct pt outputpt;

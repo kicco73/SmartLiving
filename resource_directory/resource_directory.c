@@ -156,18 +156,26 @@ static
 PT_THREAD(generate_routes(struct httpd_state *s))
 {
   static int i;
-  static char buf[256];
+  static char buf[512];
 
   PSOCK_BEGIN(&s->sout);
 
-  int rd_size=sizeof(rd)/sizeof(rd[0]);
-	strcpy(buf,"[");	  
-	for(i=0;i<rd_size;i++){
-		sprintf(buf+strlen(buf),"{\"n\":\"%s\",\"v\":%d}%c",rd[i].name,rd[i].value,i+1<rd_size?',':']');
-}
-	SEND_STRING(&s->sout,buf);	  
-//******************************************************
-
+	if(s->method == GET) {
+			if(!strncmp(s->filename,"/resources",11)) {
+				static int rd_size=sizeof(rd)/sizeof(rd[0]);
+				strcpy(buf,"[");	  
+				for(i=0;i<rd_size;i++) {
+					sprintf(buf+strlen(buf),"{\"n\":\"%s\",\"v\":%d}%c",rd[i].name,rd[i].value,i+1<rd_size?',':']');
+				}
+				//sprintf(buf+strlen(buf),"\nmethod: %d|\ninputbuf: %s|\nfilename: %s|", s->method, s->inputbuf, s->filename);
+				SEND_STRING(&s->sout,buf);
+			} else {
+				SEND_STRING(&s->sout,"{}");
+			}
+	} else { // In general when not GET
+			SEND_STRING(&s->sout,"{\"method\" : \"post request\"}");
+			break;
+	}
 
   PSOCK_END(&s->sout);
 }

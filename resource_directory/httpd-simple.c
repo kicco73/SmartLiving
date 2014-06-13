@@ -158,9 +158,13 @@ PT_THREAD(handle_input(struct httpd_state *s))
 
   PSOCK_READTO(&s->sin, ISO_space);
 
-  if(strncmp(s->inputbuf, http_get, 4) != 0) {
-    PSOCK_CLOSE_EXIT(&s->sin);
-  }
+	// GET Request
+  if(!strncmp(s->inputbuf, http_get, 4)) {
+    //PSOCK_CLOSE_EXIT(&s->sin);
+		s->method = GET;
+  } else {
+		s->method = POST;
+	}
   PSOCK_READTO(&s->sin, ISO_space);
 
   if(s->inputbuf[0] != ISO_slash) {
