@@ -42,9 +42,13 @@
 #include "net/uip-ds6.h"
 #include "net/rpl/rpl.h"
 
+#include "erbium.h"
+#include "er-coap-13.h"
+
 #include "net/netstack.h"
-#include "dev/button-sensor.h"
 #include "dev/slip.h"
+#include "dev/leds.h"
+#include "sys/etimer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -233,6 +237,7 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 PROCESS_THREAD(border_router_process, ev, data)
 {
   static struct etimer et;
+  static struct etimer ledETimer;
   rpl_dag_t *dag;
 
   PROCESS_BEGIN();
@@ -246,8 +251,6 @@ PROCESS_THREAD(border_router_process, ev, data)
   NETSTACK_MAC.off(0);
 
   PROCESS_PAUSE();
-
-  SENSORS_ACTIVATE(button_sensor);
 
   PRINTF("RPL-Border router started\n");
 #if 0
@@ -280,12 +283,12 @@ PROCESS_THREAD(border_router_process, ev, data)
   print_local_addresses();
 #endif
 
+  etimer_set(&ledETimer, CLOCK_SECOND >> 1);
+
   while(1) {
-    PROCESS_YIELD();
-    if (ev == sensors_event && data == &button_sensor) {
-      PRINTF("Initiating global repair\n");
-      rpl_repair_root(RPL_DEFAULT_INSTANCE);
-    }
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ledETimer));
+    etimer_restart(&ledETimer);
+    leds_toggle(LEDS_GREEN);
   }
 
   PROCESS_END();
