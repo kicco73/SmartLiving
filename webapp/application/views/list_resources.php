@@ -4,7 +4,9 @@
 
 <div id="container">
 	<h1>Sensor<b>Igniter</b></h1>
-
+	<div class="toolbar">
+		<div id="refreshDirectory" title="Reload resource directory"></div>
+	</div>
 	<div id="body">
 		
 		<table class="resources">
@@ -46,7 +48,7 @@
 function ajaxSwitchToggle(button) {
 	var button = $(this);
 	var rel = button.attr("rel");
-	$.getJSON("/index.php/resource/ajaxSwitchToggle/"+rel, function(data) {
+	$.getJSON("/resource/ajaxSwitchToggle/"+rel, function(data) {
 		button.attr("class", "switch");
 		button.addClass(data.currentValue? "on" : "off");
 	}).error(function() {
@@ -60,7 +62,7 @@ function ajaxDimmerChange(dimmer) {
 	var old = parseFloat(dimmer.attr("data"));
 	var val = dimmer.slider("value");
 	if(val != old) 
-		$.getJSON("/index.php/resource/ajaxDimmerChange/"+rel+"/"+val, function(data) {
+		$.getJSON("/resource/ajaxDimmerChange/"+rel+"/"+val, function(data) {
 			dimmer.attr("data", data.currentValue);
 			dimmer.slider("value", data.currentValue);
 		}).error(function() {
@@ -71,7 +73,7 @@ function ajaxDimmerChange(dimmer) {
 function ajaxSensorRefresh(sensor) {
 	var sensor = $(this);
 	var rel = sensor.attr("rel");
-	$.getJSON("/index.php/resource/ajaxSensorRefresh/"+rel, function(data) {
+	$.getJSON("/resource/ajaxSensorRefresh/"+rel, function(data) {
 		sensor.html(data.currentValue+" "+data.unit);
 	}).error(function() {
 		alert("Cannot refresh sensor value");
@@ -84,6 +86,7 @@ $(document).ready(function() {
 		$(this).slider("value", $(this).attr("data"));
 	});
 	$(".sensor").css("cursor", "pointer").click(ajaxSensorRefresh);
+	$(".toolbar div").button();
 });
 
 </script>

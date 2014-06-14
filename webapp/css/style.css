@@ -2,6 +2,22 @@ html {
 	background-color: #eee;
 }
 
+.toolbar {
+  float: right;
+  position: relative;
+  right: 13px;
+  top: -55px;
+}
+
+#refreshDirectory {
+   background-image: url(/images/refreshDirectory.png);
+   background-position: center center;
+   background-repeat: no-repeat;
+   width: 32px;
+   height: 32px;
+   border-radius: 16px;
+}
+
 table {
 	background-color: white;
 	width: 100%;

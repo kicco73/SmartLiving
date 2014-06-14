@@ -75,7 +75,7 @@ class Resource extends CI_Controller {
 	}
 	
 	function _rd_baseurl() {
-		return $this->config->base_url()."index.php/resource/fake_rd";
+		return $this->config->base_url()."resource/fake_rd";
 	}
 	
 	public function fake_rd() {
