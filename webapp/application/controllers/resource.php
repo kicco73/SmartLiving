@@ -44,7 +44,7 @@ class Resource extends CI_Controller {
 		$this->load->view('list_resources', array("resources" => $resources));
 	}
 
-	public function ajax_switch_toggle($id) {
+	public function ajaxSwitchToggle($id) {
 		$resource = $this->Resource_model->get($id);
 		$resource->currentValue = $resource->currentValue > 0? 0 : 1;
 		if($this->_restPut($resource->name, $resource->currentValue)) {
@@ -56,7 +56,7 @@ class Resource extends CI_Controller {
 		}
 	}
 
-	public function ajax_dimmer_change($id, $val) {
+	public function ajaxDimmerChange($id, $val) {
 		$resource = $this->Resource_model->get($id);
 		$resource->currentValue = (float) $val;
 		$restUrl = $this->_rd_baseurl().$resource->name+"?v=".$resource->currentValue;
@@ -69,7 +69,7 @@ class Resource extends CI_Controller {
 		}
 	}
 	
-	public function ajax_sensor_refresh($id) {
+	public function ajaxSensorRefresh($id) {
 		$resource = $this->Resource_model->get($id);
 		$this->output->set_content_type('application/json')->set_output(json_encode($resource));
 	}

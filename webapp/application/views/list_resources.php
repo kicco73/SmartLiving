@@ -43,10 +43,10 @@
 
 <script>
 
-function toggleSwitch(button) {
+function ajaxSwitchToggle(button) {
 	var button = $(this);
 	var rel = button.attr("rel");
-	$.getJSON("/index.php/resource/ajax_switch_toggle/"+rel, function(data) {
+	$.getJSON("/index.php/resource/ajaxSwitchToggle/"+rel, function(data) {
 		button.attr("class", "switch");
 		button.addClass(data.currentValue? "on" : "off");
 	}).error(function() {
@@ -54,13 +54,13 @@ function toggleSwitch(button) {
 	});
 }
 
-function changeDimmer(dimmer) {
+function ajaxDimmerChange(dimmer) {
 	var dimmer = $(this);
 	var rel = dimmer.attr("rel");
 	var old = parseFloat(dimmer.attr("data"));
 	var val = dimmer.slider("value");
 	if(val != old) 
-		$.getJSON("/index.php/resource/ajax_dimmer_change/"+rel+"/"+val, function(data) {
+		$.getJSON("/index.php/resource/ajaxDimmerChange/"+rel+"/"+val, function(data) {
 			dimmer.attr("data", data.currentValue);
 			dimmer.slider("value", data.currentValue);
 		}).error(function() {
@@ -68,10 +68,10 @@ function changeDimmer(dimmer) {
 		});
 }
 
-function refreshSensor(sensor) {
+function ajaxSensorRefresh(sensor) {
 	var sensor = $(this);
 	var rel = sensor.attr("rel");
-	$.getJSON("/index.php/resource/ajax_sensor_refresh/"+rel, function(data) {
+	$.getJSON("/index.php/resource/ajaxSensorRefresh/"+rel, function(data) {
 		sensor.html(data.currentValue+" "+data.unit);
 	}).error(function() {
 		alert("Cannot refresh sensor value");
@@ -79,11 +79,11 @@ function refreshSensor(sensor) {
 }
 
 $(document).ready(function() {
-	$(".switch").css("cursor", "pointer").click(toggleSwitch);
-	$(".dimmer").slider({min: 0, max: 1, step:0.05, change: changeDimmer}).each(function() {
+	$(".switch").css("cursor", "pointer").click(ajaxSwitchToggle);
+	$(".dimmer").slider({min: 0, max: 1, step:0.05, change: ajaxDimmerChange}).each(function() {
 		$(this).slider("value", $(this).attr("data"));
 	});
-	$(".sensor").css("cursor", "pointer").click(refreshSensor);
+	$(".sensor").css("cursor", "pointer").click(ajaxSensorRefresh);
 });
 
 </script>
