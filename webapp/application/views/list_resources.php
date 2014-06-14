@@ -27,7 +27,7 @@
 				echo '<div class="dimmer" rel="'.$resource->id.'" data="'.$resource->currentValue.'"></div>';
 				break;
 			default:
-				echo $resource->currentValue." ".$resource->unit;
+				echo '<div class="sensor" title="Refresh sensor value" rel="'.$resource->id.'">'.$resource->currentValue." ".$resource->unit."</div>";
 				break;
 			}
 			echo "</td><td><a>".$resource->name."</a></td>";
@@ -49,6 +49,8 @@ function toggleSwitch(button) {
 	$.getJSON("/index.php/resource/json_switch_toggle/"+rel, function(data) {
 		button.attr("class", "switch");
 		button.addClass(data.currentValue? "on" : "off");
+	}).error(function() {
+		alert("Cannot toggle switch");
 	});
 }
 
@@ -61,7 +63,19 @@ function changeDimmer(dimmer) {
 		$.getJSON("/index.php/resource/json_dimmer_change/"+rel+"/"+val, function(data) {
 			dimmer.attr("data", data.currentValue);
 			dimmer.slider("value", data.currentValue);
+		}).error(function() {
+			alert("Cannot change dimmer value");
 		});
+}
+
+function refreshSensor(sensor) {
+	var sensor = $(this);
+	var rel = sensor.attr("rel");
+	$.getJSON("/index.php/resource/json_sensor_refresh/"+rel, function(data) {
+		sensor.html(data.currentValue+" "+data.unit);
+	}).error(function() {
+		alert("Cannot refresh sensor value");
+	});
 }
 
 $(document).ready(function() {
@@ -69,6 +83,7 @@ $(document).ready(function() {
 	$(".dimmer").slider({min: 0, max: 1, step:0.05, change: changeDimmer}).each(function() {
 		$(this).slider("value", $(this).attr("data"));
 	});
+	$(".sensor").css("cursor", "pointer").click(refreshSensor);
 });
 
 </script>
