@@ -13,7 +13,7 @@ CFLAGS+= -DUIP_CONF_IPV6=1 -DWITH_UIP6=1
 
 CFLAGS += -DWITH_COAP=13
 CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
+CFLAGS += -DUIP_CONF_TCP=1
 APPS += er-coap-13
 APPS += erbium
 

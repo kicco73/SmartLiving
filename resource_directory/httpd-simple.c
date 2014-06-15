@@ -71,24 +71,6 @@ MEMB(conns, struct httpd_state, CONNS);
 #define ISO_period  0x2e
 #define ISO_slash   0x2f
 
-/*---------------------------------------------------------------------------*/
-static const char *NOT_FOUND = "<html><body bgcolor=\"white\">"
-"<center>"
-"<h1>404 - file not found</h1>"
-"</center>"
-"</body>"
-"</html>";
-/*---------------------------------------------------------------------------*/
-static
-PT_THREAD(send_string(struct httpd_state *s, const char *str))
-{
-  PSOCK_BEGIN(&s->sout);
-
-  SEND_STRING(&s->sout, str);
-
-  PSOCK_END(&s->sout);
-}
-/*---------------------------------------------------------------------------*/
 const char http_content_type_json[] = "Content-type: application/json\r\n\r\n";
 static
 PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
@@ -129,20 +111,10 @@ PT_THREAD(handle_output(struct httpd_state *s))
 
   s->script = NULL;
   s->script = httpd_simple_get_script(&s->filename[1]);
-  if(s->script == NULL) {
-    strncpy(s->filename, "/notfound.html", sizeof(s->filename));
-    PT_WAIT_THREAD(&s->outputpt,
-                   send_headers(s, http_header_404));
-    PT_WAIT_THREAD(&s->outputpt,
-                   send_string(s, NOT_FOUND));
-    uip_close();
-    webserver_log_file(&uip_conn->ripaddr, "404 - not found");
-    PT_EXIT(&s->outputpt);
-  } else {
-    PT_WAIT_THREAD(&s->outputpt,
-                   send_headers(s, http_header_200));
-    PT_WAIT_THREAD(&s->outputpt, s->script(s));
-  }
+
+  PT_WAIT_THREAD(&s->outputpt, send_headers(s, http_header_200));
+  PT_WAIT_THREAD(&s->outputpt, s->script(s));
+
   s->script = NULL;
   PSOCK_CLOSE(&s->sout);
   PT_END(&s->outputpt);
