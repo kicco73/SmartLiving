@@ -67,12 +67,18 @@ static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 
 struct resource {
-	char * name;
-	char * ip;
-	int value;
+	uip_ipaddr_t address;
+	char *n;
+	int v;
+	char *u;
+	char *rt;
 };
  
-static struct resource rd[]={{.name="/dimmer", .ip="aaaa::2", .value=30},{.name="/light", .ip="aaaa::2", .value=300},{.name="/sound", .ip="aaaa::3", .value=10}}; 
+static struct resource rd[]={
+	{.address=0, .n="/accelerometer", .v=0, .u="m/s^2", .rt="sensor"},
+	{.address=0, .n="/light", .v=0, .u="lux", .rt="dimmer"},
+	{.address=0, .n="/fan", .v=0, .u="", .rt="switch"}
+}; 
 
 PROCESS(border_router_process, "Border router process");
 
@@ -121,64 +127,64 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
 }
 AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 
+const char this_http[] = "http://aaaa::c30c:0:0:1";
 
-#if BUF_USES_STACK
-static char *bufptr, *bufend;
-#define ADD(...) do {                                                   \
-    bufptr += snprintf(bufptr, bufend - bufptr, __VA_ARGS__);      \
-  } while(0)
-#else
-static char buf[256];
-static int blen;
-#define ADD(...) do {                                                   \
-    blen += snprintf(&buf[blen], sizeof(buf) - blen, __VA_ARGS__);      \
-  } while(0)
-#endif
-
-/*---------------------------------------------------------------------------*/
-static void
-ipaddr_add(const uip_ipaddr_t *addr)
-{
-  uint16_t a;
-  int i, f;
-  for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
-    a = (addr->u8[i] << 8) + addr->u8[i + 1];
-    if(a == 0 && f >= 0) {
-      if(f++ == 0) ADD("::");
-    } else {
-      if(f > 0) {
-        f = -1;
-      } else if(i > 0) {
-        ADD(":");
-      }
-      ADD("%x", a);
-    }
-  }
-}
-/*---------------------------------------------------------------------------*/
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
 {
-  static int i;
-  static char buf[512];
+  static int i, v;
+  static char buf[512], *pch;
+	static int rd_size=sizeof(rd)/sizeof(rd[0]);
 
   PSOCK_BEGIN(&s->sout);
 
 	if(s->method == GET) {
-			if(!strncmp(s->filename,"/resources",11)) {
-				static int rd_size=sizeof(rd)/sizeof(rd[0]);
-				strcpy(buf,"[");	  
-				for(i=0;i<rd_size;i++) {
-					sprintf(buf+strlen(buf),"{\"n\":\"%s\",\"v\":%d}%c",rd[i].name,rd[i].value,i+1<rd_size?',':']');
-				}
-				//sprintf(buf+strlen(buf),"\nmethod: %d|\ninputbuf: %s|\nfilename: %s|", s->method, s->inputbuf, s->filename);
-				SEND_STRING(&s->sout,buf);
-			} else {
-				SEND_STRING(&s->sout,"{}");
+
+		if(!strncmp(s->filename, "/" ,2)) { // GET all resources
+			strcpy(buf,"[");	  
+			for(i=0;i<rd_size;i++) {
+				sprintf(buf+strlen(buf),"{\"n\":\"%s%s\",\"v\":%d,\"u\":\"%s\",\"rt\":\"%s\"}%c",this_http,rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<rd_size?',':']');
 			}
-	} else { // In general when not GET
-			SEND_STRING(&s->sout,"{\"method\" : \"post request\"}");
-			break;
+			SEND_STRING(&s->sout,buf);
+
+		} else { // GET a single resource
+			for(i=0;i<rd_size;i++) {
+				if(strcmp(s->filename, rd[i].n) == 0) {
+					sprintf(buf,"{\"n\":\"%s%s\",\"v\":%d}",this_http,rd[i].n,rd[i].v);
+					SEND_STRING(&s->sout,buf);
+					break;
+				}
+			}
+		}
+
+	} else { // PUT value in resource
+		pch = strtok(s->filename, "?");
+
+		// First find the resource
+		for(i=0;i<rd_size;i++) if(strcmp(pch, rd[i].n) == 0) break;
+
+		if(i != rd_size) {
+			pch = strtok(NULL, "?");
+			if(pch != NULL) {
+				pch = strtok(pch, "=");
+				if(pch != NULL && strcmp(pch, "v") == 0) {
+					pch = strtok(NULL, "=");
+					if(pch != NULL) {
+						v = strtol(pch, &pch, 10);
+						if(*pch == '\0') {
+							// FIXME: send coap request to rd[i].address, for resource rd[i].n and with value v
+							sprintf(buf, "value is %d", v);
+							SEND_STRING(&s->sout,buf);
+						} else
+							SEND_STRING(&s->sout,"{\"message\" : \"not an integer value\"}");
+					}	else
+						SEND_STRING(&s->sout,"{\"message\" : \"missing parameter's value\"}");
+				} else
+					SEND_STRING(&s->sout,"{\"message\" : \"invalid parameters\"}");
+			} else
+				SEND_STRING(&s->sout,"{\"message\" : \"missing parameters\"}");
+		} else
+			SEND_STRING(&s->sout,"{\"message\" : \"resource not found\"}");
 	}
 
   PSOCK_END(&s->sout);
