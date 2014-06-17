@@ -8,7 +8,7 @@
 		<?php
 		$i = 0;
 		foreach($resources as $resource) {
-			echo "<tr class=".($i % 2? 'odd' : 'even').">";
+			echo '<tr class="resource '.($i % 2? 'odd' : 'even').'">';
 			echo '<td class="value">';
 			switch($resource->resType) {
 			case "switch":
@@ -21,7 +21,8 @@
 				echo '<div class="sensor" title="Refresh sensor value" rel="'.$resource->id.'">'.$resource->currentValue." ".$resource->unit."</div>";
 				break;
 			}
-			echo "</td><td><a>".$resource->name."</a></td>";
+			echo '</td><td><div class="remove" rel="'.$resource->id.'">Remove</div>';
+			echo "<a>".$resource->name."</a></td>";
 			echo "<td>".$resource->description."</td>";
 			echo "</tr>";
 			$i++;
@@ -39,6 +40,7 @@ $(document).ready(function() {
 		$(this).slider("value", $(this).attr("data"));
 	});
 	$(".sensor").css("cursor", "pointer").click(ajaxSensorRefresh);
+	$(".remove").css("cursor", "pointer").click(ajaxResourceRemove);
 });
 
 </script>

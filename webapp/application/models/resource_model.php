@@ -42,4 +42,8 @@ class Resource_model extends CI_Model {
 					  'unit' => $unit, 'resType' => $type));
 	}
 	
+	function delete($id) {
+		$this->db->where('id', $id)->delete('Resource'); 
+	}
+	
 }

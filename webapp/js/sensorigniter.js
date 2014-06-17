@@ -32,3 +32,13 @@ function ajaxSensorRefresh(sensor) {
 		alert("Cannot refresh sensor value");
 	});
 }
+
+function ajaxResourceRemove(resource) {
+	var sensor = $(this);
+	var rel = sensor.attr("rel");
+	$.getJSON("/resources/ajaxResourceRemove/"+rel, function(data) {
+		sensor.closest('.resource').remove();
+	}).error(function() {
+		alert("Cannot remove resource");
+	});
+}

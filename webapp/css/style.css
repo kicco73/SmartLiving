@@ -2,6 +2,18 @@ html {
 	background-color: #eee;
 }
 
+.remove {
+  background-color: black;
+  color: white;
+  text-transform: lowercase;
+  padding-left: 5px;
+  padding-right: 5px;
+  font-size:smaller;
+  border-radius: 5px;
+  float: left;
+  margin-right: 10px;
+}
+
 .toolbar {
   float: right;
   position: relative;

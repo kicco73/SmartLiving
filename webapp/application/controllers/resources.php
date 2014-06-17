@@ -111,6 +111,11 @@ class Resources extends CI_Controller {
 		}
 	}
 	
+	public function ajaxResourceRemove($id) {
+		$this->Resource_model->delete($id);
+		$this->output->set_status_header('204'); // no content	
+	}
+	
 	private function _rd_baseurl() {
 		return $this->config->base_url()."resources/fake_rd";
 	}
