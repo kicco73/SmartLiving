@@ -18,6 +18,11 @@ class Resource_model extends CI_Model {
 		return $this->db->get("Resource")->result();
 	}
 		
+		
+	function list_all_samples($id) {
+		return $this->db->where("resourceId", $id)->get("Sample")->result();
+	}
+	
 	function add_sample($name, $value) {
 		$result = $this->db->where('name', $name)->get('Resource')->result();
 		if(count($result) > 0) {

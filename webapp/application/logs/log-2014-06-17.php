@@ -107,3 +107,31 @@ ERROR - 2014-06-17 11:45:20 --> Severity: Notice  --> Undefined variable: b /Use
 ERROR - 2014-06-17 11:45:20 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
 ERROR - 2014-06-17 11:45:20 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Output.php 391
 ERROR - 2014-06-17 11:45:20 --> resource directory unreachable
+ERROR - 2014-06-17 15:15:53 --> Severity: Warning  --> Missing argument 1 for Resources::ajaxChart() /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 119
+ERROR - 2014-06-17 15:15:53 --> Severity: Notice  --> Undefined variable: id /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 120
+ERROR - 2014-06-17 15:15:53 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/resource_model.php 10
+ERROR - 2014-06-17 15:16:01 --> Severity: Warning  --> Missing argument 1 for Resources::ajaxChart() /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 119
+ERROR - 2014-06-17 15:16:01 --> Severity: Notice  --> Undefined variable: id /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 120
+ERROR - 2014-06-17 15:16:01 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/resource_model.php 10
+ERROR - 2014-06-17 15:16:37 --> Severity: Warning  --> Missing argument 1 for Resources::ajaxChart() /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 119
+ERROR - 2014-06-17 15:16:37 --> Severity: Notice  --> Undefined variable: id /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 120
+ERROR - 2014-06-17 15:16:37 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/resource_model.php 10
+ERROR - 2014-06-17 15:31:44 --> Severity: Notice  --> Undefined variable: samples /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 11
+ERROR - 2014-06-17 15:31:44 --> Severity: Warning  --> Invalid argument supplied for foreach() /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 11
+ERROR - 2014-06-17 15:33:23 --> Severity: Notice  --> Undefined variable: samples /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 11
+ERROR - 2014-06-17 15:33:23 --> Severity: Warning  --> Invalid argument supplied for foreach() /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 11
+ERROR - 2014-06-17 15:35:08 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:08 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:08 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:08 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:08 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:36 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:36 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:36 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:36 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:36 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:56 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:56 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:56 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:56 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12
+ERROR - 2014-06-17 15:35:56 --> Severity: Notice  --> Undefined property: stdClass::$timestamp /Users/kicco/Documents/SmartLiving/webapp/application/views/chart.php 12

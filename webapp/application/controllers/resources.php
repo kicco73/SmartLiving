@@ -116,6 +116,12 @@ class Resources extends CI_Controller {
 		$this->output->set_status_header('204'); // no content	
 	}
 	
+	public function chart($id) {
+		$resource = $this->Resource_model->get($id);
+		$samples = $this->Resource_model->list_all_samples($id);
+		$this->load->view("chart", array("resource" => $resource, "samples" =>$samples));
+	}
+	
 	private function _rd_baseurl() {
 		return $this->config->base_url()."resources/fake_rd";
 	}
