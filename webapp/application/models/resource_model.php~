@@ -7,11 +7,15 @@ class Resource_model extends CI_Model {
 
 	function get($id) {
 		$result = $this->db->where('id', $id)->get('Resource');
-		
-			return $result;
-		
+		return $result;
 	}
 	
+	function add_sample($name, $value) {
+		$resource = $this->db->where('name', $name)->get('Resource');
+		$this->update($resource);
+		$this->db->insert('Sample', array('resource_id' => $resource->id, 'value' => $value));
+	}
+
 	function update($resource) {
 		$this->db->where('id', $resource->id)->update('Resource', $resource);
 	}
