@@ -22,7 +22,7 @@
 				break;
 			}
 			echo '</td><td><div class="remove" rel="'.$resource->id.'">Remove</div>';
-			echo '<a class="fancybox" title="'.$resource->description.'" href="/resources/chart/'.$resource->id.'">'.$resource->name."</a></td>";
+			echo '<a class="fancybox" title="Sensed values" href="/resources/chart/'.$resource->id.'">'.$resource->name."</a></td>";
 			echo "<td>".$resource->description."</td>";
 			echo "</tr>";
 			$i++;
