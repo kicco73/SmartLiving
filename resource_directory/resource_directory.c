@@ -55,8 +55,16 @@
 #include <string.h>
 #include <ctype.h>
 
+// COAP_DEFAULT_PORT = 5683
+#define REGISTER_PORT	UIP_HTONS(COAP_DEFAULT_PORT)
+#define GET_SENSOR_PORT	UIP_HTONS(COAP_DEFAULT_PORT+1)
+#define PUT_SENSOR_PORT	UIP_HTONS(COAP_DEFAULT_PORT+2)
+
 #define DEBUG DEBUG_NONE
-#include "net/uip-debug.h"
+#ifdef PRINTA
+#undef PRINTA
+#define PRINTA 
+#endif
 
 uint16_t dag_id[] = {0x1111, 0x1100, 0, 0, 0, 0, 0, 0x0011};
 
@@ -66,18 +74,20 @@ extern uip_ds6_route_t uip_ds6_routing_table[];
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 
+static coap_packet_t request[1];
+
 struct resource {
 	uip_ipaddr_t address;
 	char *n;
-	int v;
+	char *v;
 	char *u;
 	char *rt;
 };
  
 static struct resource rd[]={
-	{.address=0, .n="/accelerometer", .v=0, .u="m/s^2", .rt="sensor"},
-	{.address=0, .n="/light", .v=0, .u="lux", .rt="dimmer"},
-	{.address=0, .n="/fan", .v=0, .u="", .rt="switch"}
+	{.address=0, .n="/accelerometer", .v="0", .u="m/s^2", .rt="sensor"},
+	{.address=0, .n="/light", .v="0", .u="lux", .rt="dimmer"},
+	{.address=0, .n="/fan", .v="0", .u="", .rt="switch"}
 }; 
 
 PROCESS(border_router_process, "Border router process");
@@ -111,6 +121,51 @@ AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 #define BUF_USES_STACK 1
 #endif
 
+// Handle CoAP PUT response
+void client_put_handler(void *response) {
+	// FIXME: update resource in local RD
+  /*const uint8_t *chunk;
+	char *n = "\"n\":", *v = "\"v\":", *value = NULL, *name = NULL;
+  PRINTA("Ho la risposta\n");
+  int len = coap_get_payload(response, &chunk);
+  int status = ((coap_packet_t*)response)->code;
+
+	static char *pch;
+	pch = strtok(chunk, "{}");
+	pch = strtok(NULL, ",");
+	while(pch != NULL) {
+		if(strncmp(pch, v, strlen(v)) == 0) {
+			value = pch+strlen(v);
+		} else if(strncmp(pch, n, strlen(v)) == 0) {
+			name = pch+strlen(n);
+		}
+		pch = strtok(NULL, ",");
+	}
+	// Correct response received
+	if(value != NULL && name != NULL) {
+	}
+}
+
+  PRINTA("Reply: %d %.*s\n", status, len, (char*) chunk);*/
+}
+
+// Handle CoAP GET response
+void client_get_handler(void *response) {
+	// TODO: add resource to local RD, and verify duplicates?
+	PRINTA("clien");
+}
+
+void register_sensor_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+	// FIXME: Request resources' list to the new sensor
+	uint8_t length;
+	REST.set_header_content_type(response, REST.type.APPLICATION_JSON); 
+	REST.set_header_etag(response, (uint8_t *) &length, 1);
+	REST.set_response_status(response, REST.status.OK);
+	leds_toggle(LEDS_BLUE);
+}
+
+EVENT_RESOURCE(register_sensor, METHOD_POST, "register", "title=\"register resource\";rt=\"Text\"");
+
 PROCESS(webserver_nogui_process, "Web server");
 PROCESS_THREAD(webserver_nogui_process, ev, data)
 {
@@ -127,13 +182,13 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
 }
 AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 
-const char this_http[] = "http://aaaa::c30c:0:0:1";
+const char this_http[] = "http://[aaaa::c30c:0:0:1]";
 
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
 {
-  static int i, v;
-  static char buf[512], *pch;
+  static int i;
+  char buf[512], *pch;
 	static int rd_size=sizeof(rd)/sizeof(rd[0]);
 
   PSOCK_BEGIN(&s->sout);
@@ -143,14 +198,14 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 		if(!strncmp(s->filename, "/" ,2)) { // GET all resources
 			strcpy(buf,"[");	  
 			for(i=0;i<rd_size;i++) {
-				sprintf(buf+strlen(buf),"{\"n\":\"%s%s\",\"v\":%d,\"u\":\"%s\",\"rt\":\"%s\"}%c",this_http,rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<rd_size?',':']');
+				sprintf(buf+strlen(buf),"{\"n\":\"%s%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",this_http,rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<rd_size?',':']');
 			}
 			SEND_STRING(&s->sout,buf);
 
 		} else { // GET a single resource
 			for(i=0;i<rd_size;i++) {
 				if(strcmp(s->filename, rd[i].n) == 0) {
-					sprintf(buf,"{\"n\":\"%s%s\",\"v\":%d}",this_http,rd[i].n,rd[i].v);
+					sprintf(buf,"{\"n\":\"%s%s\",\"v\":%s}",this_http,rd[i].n,rd[i].v);
 					SEND_STRING(&s->sout,buf);
 					break;
 				}
@@ -170,13 +225,14 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 				if(pch != NULL && strcmp(pch, "v") == 0) {
 					pch = strtok(NULL, "=");
 					if(pch != NULL) {
-						v = strtol(pch, &pch, 10);
-						if(*pch == '\0') {
-							// FIXME: send coap request to rd[i].address, for resource rd[i].n and with value v
-							sprintf(buf, "value is %d", v);
-							SEND_STRING(&s->sout,buf);
-						} else
-							SEND_STRING(&s->sout,"{\"message\" : \"not an integer value\"}");
+						// FIXME: I tried to skip the "/", not sure if it works
+						char *resource = rd[i].n;
+						resource += 1;
+						coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+  					coap_set_header_uri_path(request, resource);
+						sprintf(buf, "v=%s", pch);
+  					coap_set_header_uri_query(request, buf);
+						//COAP_BLOCKING_REQUEST(&(rd[i].address), PUT_SENSOR_PORT, request, client_put_handler);
 					}	else
 						SEND_STRING(&s->sout,"{\"message\" : \"missing parameter's value\"}");
 				} else
@@ -258,7 +314,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   PROCESS_PAUSE();
 
-  PRINTF("RPL-Border router started\n");
+  //PRINTF("RPL-Border router started\n");
 #if 0
    /* The border router runs with a 100% duty cycle in order to ensure high
      packet reception rates.
@@ -277,7 +333,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   dag = rpl_set_root(RPL_DEFAULT_INSTANCE,(uip_ip6addr_t *)dag_id);
   if(dag != NULL) {
     rpl_set_prefix(dag, &prefix, 64);
-    PRINTF("created a new RPL dag\n");
+    //PRINTF("created a new RPL dag\n");
   }
 
   /* Now turn the radio on, but disable radio duty cycling.
@@ -285,17 +341,24 @@ PROCESS_THREAD(border_router_process, ev, data)
    */
   NETSTACK_MAC.off(1);
   
-#if DEBUG || 1
+#if DEBUG
   print_local_addresses();
 #endif
 
   etimer_set(&ledETimer, CLOCK_SECOND >> 1);
 
-  while(1) {
+  /*while(1) {
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ledETimer));
     etimer_restart(&ledETimer);
     leds_toggle(LEDS_GREEN);
-  }
+  }*/
+
+	// Initialize CoAP client
+	coap_receiver_init();
+
+	// Initialize REST server and REST resources
+	rest_init_engine();
+	rest_activate_event_resource(&resource_register_sensor);
 
   PROCESS_END();
 }

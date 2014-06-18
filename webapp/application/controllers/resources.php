@@ -123,7 +123,7 @@ class Resources extends CI_Controller {
 	}
 	
 	private function _rd_baseurl() {
-		return $this->config->base_url()."resources/fake_rd";
+		return "http://[aaaa::c30c:0:0:1]";
 	}
 	
 	public function fake_rd() {
