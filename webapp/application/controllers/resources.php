@@ -81,20 +81,6 @@ class Resources extends CI_Controller {
 		}
 	}
 	
-	public function ajaxResourceDirectoryRefresh() {
-		$b = $this->_rd_baseurl();
-		$rv = $this->_restGet($b."/");
-		if($rv != false) {
-			foreach($rv as $r) 
-				$this->Resource_model->insert_or_update_by_url($b.$r->n, $r->v, $r->u, $r->rt);
-			$resources = $this->Resource_model->list_all();
-			$this->load->view('ajax_list_resources', array("resources" => $resources));
-		} else {
-			log_message('error', 'resource directory unreachable');
-			$this->output->set_status_header('500', 'resource directory unreachable');
-		}
-	}
-	
 	public function onUpdate() {
 		$method = strtolower($this->input->server('REQUEST_METHOD'));
 		$b = $this->_rd_baseurl();

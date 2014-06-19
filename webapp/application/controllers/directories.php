@@ -8,7 +8,7 @@ class Directories extends CI_Controller {
 		$info = false;
 		$opts = array(
   			'http'=>array(
-				'timeout' => Resources::IO_TIMEOUT,
+				'timeout' => Directories::IO_TIMEOUT,
  			    'method'=>$method,
  			    'header'=> "User-agent: $user_agent"
  			 )
@@ -42,7 +42,7 @@ class Directories extends CI_Controller {
 		$this->load->view('list_directories', array("directories" => $directories));
 	}
 	
-	public function ajaxDirectoryRefresh() {
+	public function ajaxDirectoryRefresh($id) {
 		$directory = $this->Directory_model->get($id);
 		$b = $directory->url;
 		$rv = $this->_restGet($b."/");
@@ -71,7 +71,7 @@ class Directories extends CI_Controller {
 		$this->Resource_model->update($resource);
 		$this->output->set_status_header('204'); // no content	
 	}
-	
+
 	public function fake_rd() {
 		$method = strtoupper($this->input->server('REQUEST_METHOD'));
 		switch($method) {

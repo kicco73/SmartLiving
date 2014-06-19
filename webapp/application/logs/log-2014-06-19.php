@@ -31,3 +31,32 @@ ERROR - 2014-06-19 11:12:25 --> Severity: Notice  --> Trying to get property of 
 ERROR - 2014-06-19 11:13:03 --> Severity: Notice  --> Undefined variable: id /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 46
 ERROR - 2014-06-19 11:13:03 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 13
 ERROR - 2014-06-19 11:13:03 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 47
+ERROR - 2014-06-19 11:16:40 --> Severity: Notice  --> Undefined variable: id /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 46
+ERROR - 2014-06-19 11:16:40 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 13
+ERROR - 2014-06-19 11:16:40 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 47
+ERROR - 2014-06-19 11:17:28 --> Severity: Notice  --> Undefined variable: id /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 46
+ERROR - 2014-06-19 11:17:28 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 13
+ERROR - 2014-06-19 11:17:28 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 47
+ERROR - 2014-06-19 11:17:29 --> Severity: Notice  --> Undefined variable: id /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 46
+ERROR - 2014-06-19 11:17:29 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 13
+ERROR - 2014-06-19 11:17:29 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 47
+ERROR - 2014-06-19 11:17:48 --> 404 Page Not Found --> resources/fake_rd
+ERROR - 2014-06-19 11:17:48 --> Severity: Warning  --> fopen(http://localhost:8888/resources/fake_rd/fan?v=0): failed to open stream: HTTP request failed! HTTP/1.0 404 Not Found
+ /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 11:17:48 --> http://localhost:8888/resources/fake_rd/fan?v=0: stream is not resource
+ERROR - 2014-06-19 11:17:48 --> resource directory unreachable
+ERROR - 2014-06-19 11:17:53 --> 404 Page Not Found --> resources/fake_rd
+ERROR - 2014-06-19 11:17:53 --> Severity: Warning  --> fopen(http://localhost:8888/resources/fake_rd/accelerometer): failed to open stream: HTTP request failed! HTTP/1.0 404 Not Found
+ /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 11:17:53 --> http://localhost:8888/resources/fake_rd/accelerometer: stream is not resource
+ERROR - 2014-06-19 11:17:53 --> resource directory unreachable
+ERROR - 2014-06-19 11:18:44 --> 404 Page Not Found --> resources/fake_rd
+ERROR - 2014-06-19 11:18:44 --> Severity: Warning  --> fopen(http://localhost:8888/resources/fake_rd/accelerometer): failed to open stream: HTTP request failed! HTTP/1.0 404 Not Found
+ /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 11:18:44 --> http://localhost:8888/resources/fake_rd/accelerometer: stream is not resource
+ERROR - 2014-06-19 11:18:44 --> resource directory unreachable
+ERROR - 2014-06-19 11:18:47 --> 404 Page Not Found --> resources/fake_rd
+ERROR - 2014-06-19 11:18:47 --> Severity: Warning  --> fopen(http://localhost:8888/resources/fake_rd/fan?v=0): failed to open stream: HTTP request failed! HTTP/1.0 404 Not Found
+ /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 11:18:47 --> http://localhost:8888/resources/fake_rd/fan?v=0: stream is not resource
+ERROR - 2014-06-19 11:18:47 --> resource directory unreachable

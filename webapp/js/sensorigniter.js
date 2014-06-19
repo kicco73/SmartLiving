@@ -68,7 +68,7 @@ function ajaxDirectoryRefresh() {
 	var rel = div.attr("rel");
 	$.ajax("/directories/ajaxDirectoryRefresh/"+rel)
 		.success(function(data) {
-			div.parent().find(".resources").replaceWith(data);
+			div.closest(".directory").find(".resources").replaceWith(data);
 		})
 		.error(function(x) {
 			alert("Cannot refresh resource directory");
