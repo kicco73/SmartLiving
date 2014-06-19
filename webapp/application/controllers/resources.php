@@ -83,18 +83,26 @@ class Resources extends CI_Controller {
 	
 	public function onUpdate() {
 		$method = strtolower($this->input->server('REQUEST_METHOD'));
-		$b = $this->_rd_baseurl();
+		$b = 'http://'.$_SERVER['REMOTE_ADDR'].':8888/directories/fake_rd';
 		switch($method) {
 		case 'post':
 			$input_data = trim(file_get_contents('php://input'));
 			log_message('error', 'input data '.$input_data);
 			$input_data = json_decode($input_data);
-			foreach($input_data as $r)
-				$this->Resource_model->add_sample($b.$r->n, $r->v);
-			$this->output->set_status_header('204'); // no content
+			foreach($input_data as $r) {
+				$ok = $this->Resource_model->add_sample($b.$r->n, $r->v);
+				if(!$ok) {
+					$this->output->set_status_header('404', $r->n.': resource not found in '.$b); // not found
+					return;
+				}
+			}
+			if(!$input_data) 
+				$this->output->set_status_header('400', "empty input"); // no content
+			else
+				$this->output->set_status_header('204'); // no content
 			break;
 		default:
-			$this->output->set_status_header('400'); // bad request
+			$this->output->set_status_header('400', 'can only process POST requests'); // bad request
 			break;
 		}
 	}
@@ -121,12 +129,6 @@ class Resources extends CI_Controller {
 	
 	public function notifier() {
 		// TODO
-	}
-	
-	private function _rd_baseurl() {
-		// NO TRAILING SLASH!
-		return $this->config->base_url()."resources/fake_rd";
-		//return "http://[aaaa::c30c:0:0:1]";
 	}
 	
 	public function fake_rd() {

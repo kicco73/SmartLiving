@@ -45,7 +45,7 @@ $(document).ready(function() {
 	$(".new .sensor").click(resource.ajaxSensorRefresh);
 	$(".new .remove").click(resource.ajaxRemove);
 	$(".new .editable").editable(resource.ajaxSet);
-	$(".new .chart").fancybox({
+	$(".chart").fancybox({
 		type : 'iframe',
     	openEffect	: 'elastic',
     	closeEffect	: 'elastic',
