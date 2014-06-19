@@ -57,7 +57,7 @@ struct httpd_state;
 typedef char (* httpd_simple_script_t)(struct httpd_state *s);
 
 struct httpd_state {
-	int method;
+  int method;
   struct timer timer;
   struct psock sin, sout;
   struct pt outputpt;

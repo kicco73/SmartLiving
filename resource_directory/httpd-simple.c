@@ -71,7 +71,7 @@ MEMB(conns, struct httpd_state, CONNS);
 #define ISO_period  0x2e
 #define ISO_slash   0x2f
 
-const char http_content_type_json[] = "Content-type: application/json\r\n\r\n";
+const char http_content_type_json[] = "Content-type:application/json\n\n";
 static
 PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
 {
@@ -102,8 +102,8 @@ PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
   PSOCK_END(&s->sout);
 }
 /*---------------------------------------------------------------------------*/
-const char http_header_200[] = "HTTP/1.0 200 OK\r\nServer: Contiki/2.4 http://www.sics.se/contiki/\r\nConnection: close\r\n";
-const char http_header_404[] = "HTTP/1.0 404 Not found\r\nServer: Contiki/2.4 http://www.sics.se/contiki/\r\nConnection: close\r\n";
+const char http_header_200[] = "HTTP/1.0 200\nConnection:close\n";
+const char http_header_404[] = "HTTP/1.0 404\nConnection:close\n";
 static
 PT_THREAD(handle_output(struct httpd_state *s))
 {
@@ -121,7 +121,6 @@ PT_THREAD(handle_output(struct httpd_state *s))
 }
 /*---------------------------------------------------------------------------*/
 const char http_get[] = "GET ";
-const char http_index_html[] = "/index.html";
 //const char http_referer[] = "Referer:"
 static
 PT_THREAD(handle_input(struct httpd_state *s))
@@ -147,12 +146,8 @@ PT_THREAD(handle_input(struct httpd_state *s))
   s->inputbuf[PSOCK_DATALEN(&s->sin) - 1] = 0;
   urlconv_tofilename(s->filename, s->inputbuf, sizeof(s->filename));
 #else /* URLCONV */
-  if(s->inputbuf[1] == ISO_space) {
-    strncpy(s->filename, http_index_html, sizeof(s->filename));
-  } else {
     s->inputbuf[PSOCK_DATALEN(&s->sin) - 1] = 0;
     strncpy(s->filename, s->inputbuf, sizeof(s->filename));
-  }
 #endif /* URLCONV */
 
   webserver_log_file(&uip_conn->ripaddr, s->filename);
@@ -185,6 +180,7 @@ handle_connection(struct httpd_state *s)
 void
 httpd_appcall(void *state)
 {
+	static char serving;
   struct httpd_state *s = (struct httpd_state *)state;
 
   if(uip_closed() || uip_aborted() || uip_timedout()) {
@@ -194,26 +190,28 @@ httpd_appcall(void *state)
     }
   } else if(uip_connected()) {
     s = (struct httpd_state *)memb_alloc(&conns);
-    if(s == NULL) {
+    if(!s || serving) {
       uip_abort();
-      webserver_log_file(&uip_conn->ripaddr, "reset (no memory block)");
+      //webserver_log_file(&uip_conn->ripaddr, "reset (no memory block)");
       return;
     }
-    tcp_markconn(uip_conn, s);
-    PSOCK_INIT(&s->sin, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
-    PSOCK_INIT(&s->sout, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
-    PT_INIT(&s->outputpt);
-    s->script = NULL;
-    s->state = STATE_WAITING;
-    timer_set(&s->timer, CLOCK_SECOND * 10);
-    handle_connection(s);
-  } else if(s != NULL) {
+     serving = 1;
+     tcp_markconn(uip_conn, s);
+   	 PSOCK_INIT(&s->sin, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
+     PSOCK_INIT(&s->sout, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
+     PT_INIT(&s->outputpt);
+     s->script = NULL;
+     s->state = STATE_WAITING;
+     timer_set(&s->timer, CLOCK_SECOND * 10);
+     handle_connection(s);
+     //serving = 0;
+  } else if(s) {
     if(uip_poll()) {
       if(timer_expired(&s->timer)) {
         uip_abort();
         s->script = NULL;
         memb_free(&conns, s);
-        webserver_log_file(&uip_conn->ripaddr, "reset (timeout)");
+        //webserver_log_file(&uip_conn->ripaddr, "reset (timeout)");
       }
     } else {
       timer_restart(&s->timer);
@@ -228,7 +226,6 @@ httpd_appcall(void *state)
 void
 httpd_init(void)
 {
-
   tcp_listen(UIP_HTONS(80));
   memb_init(&conns);
 #if URLCONV
