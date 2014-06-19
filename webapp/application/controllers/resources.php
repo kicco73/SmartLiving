@@ -138,12 +138,9 @@ class Resources extends CI_Controller {
 	}
 	
 	private function _rd_baseurl() {
-<<<<<<< HEAD
 		// NO TRAILING SLASH!
 		return $this->config->base_url()."resources/fake_rd";
-=======
-		return "http://[aaaa::c30c:0:0:1]";
->>>>>>> caee6f71c74f1228841652efb006e9d4130f3ad9
+		//return "http://[aaaa::c30c:0:0:1]";
 	}
 	
 	public function fake_rd() {
