@@ -48,6 +48,7 @@
 #include "net/netstack.h"
 #include "dev/slip.h"
 #include "dev/leds.h"
+#include "dev/button-sensor.h"
 #include "sys/etimer.h"
 
 #include <stdio.h>
@@ -61,10 +62,7 @@
 #define PUT_SENSOR_PORT	UIP_HTONS(COAP_DEFAULT_PORT+2)
 
 #define DEBUG DEBUG_NONE
-#ifdef PRINTA
-#undef PRINTA
-#define PRINTA 
-#endif
+#include "net/uip-debug.h"
 
 uint16_t dag_id[] = {0x1111, 0x1100, 0, 0, 0, 0, 0, 0x0011};
 
@@ -121,38 +119,33 @@ AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 #define BUF_USES_STACK 1
 #endif
 
+static char *put_resource;
+static char *put_value;
+static char coap_success;
+
 // Handle CoAP PUT response
 void client_put_handler(void *response) {
 	// FIXME: update resource in local RD
-  /*const uint8_t *chunk;
-	char *n = "\"n\":", *v = "\"v\":", *value = NULL, *name = NULL;
-  PRINTA("Ho la risposta\n");
-  int len = coap_get_payload(response, &chunk);
+	int i;
   int status = ((coap_packet_t*)response)->code;
 
-	static char *pch;
-	pch = strtok(chunk, "{}");
-	pch = strtok(NULL, ",");
-	while(pch != NULL) {
-		if(strncmp(pch, v, strlen(v)) == 0) {
-			value = pch+strlen(v);
-		} else if(strncmp(pch, n, strlen(v)) == 0) {
-			name = pch+strlen(n);
+	if(status == REST.status.OK || status == REST.status.CHANGED) {
+		i = find_resource(put_resource);
+		if(i != -1) {
+			rd[i].v = put_value;
+			coap_success = 1;
 		}
-		pch = strtok(NULL, ",");
-	}
-	// Correct response received
-	if(value != NULL && name != NULL) {
+	} else {
+		coap_success = 0;
 	}
 }
 
-  PRINTA("Reply: %d %.*s\n", status, len, (char*) chunk);*/
-}
+  //PRINTA("Reply: %d %.*s\n", status, len, (char*) chunk);
 
 // Handle CoAP GET response
 void client_get_handler(void *response) {
 	// TODO: add resource to local RD, and verify duplicates?
-	PRINTA("clien");
+	PRINTA("client_get_handler()");
 }
 
 void register_sensor_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
@@ -164,7 +157,19 @@ void register_sensor_handler(void* request, void* response, uint8_t *buffer, uin
 	leds_toggle(LEDS_BLUE);
 }
 
-EVENT_RESOURCE(register_sensor, METHOD_POST, "register", "title=\"register resource\";rt=\"Text\"");
+EVENT_RESOURCE(register_sensor, METHOD_POST, "register", "title=\"register_resource\";rt=\"Text\"");
+
+int find_resource(char *name) {
+	int i;
+	int rd_size=sizeof(rd)/sizeof(rd[0]);
+
+	for(i=0;i<rd_size;i++) {
+		if(strcmp(name, rd[i].n) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
 
 PROCESS(webserver_nogui_process, "Web server");
 PROCESS_THREAD(webserver_nogui_process, ev, data)
@@ -180,35 +185,34 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
   
   PROCESS_END();
 }
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 
-const char this_http[] = "http://[aaaa::c30c:0:0:1]";
+// TODO: to remove
+//PROCESS(button_on_update_process, "Send HTTP request with button process");
+
+AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process/*,&button_on_update_process*/);
 
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
 {
   static int i;
-  char buf[512], *pch;
-	static int rd_size=sizeof(rd)/sizeof(rd[0]);
-
-  PSOCK_BEGIN(&s->sout);
+  char buf[128], *pch;
+	int rd_size=sizeof(rd)/sizeof(rd[0]);
 
 	if(s->method == GET) {
 
 		if(!strncmp(s->filename, "/" ,2)) { // GET all resources
-			strcpy(buf,"[");	  
+			strcpy(s->http_output_payload,"[");	  
 			for(i=0;i<rd_size;i++) {
-				sprintf(buf+strlen(buf),"{\"n\":\"%s%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",this_http,rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<rd_size?',':']');
+				sprintf(s->http_output_payload+strlen(s->http_output_payload),"{\"n\":\"%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<rd_size?',':']');
 			}
-			SEND_STRING(&s->sout,buf);
 
 		} else { // GET a single resource
-			for(i=0;i<rd_size;i++) {
-				if(strcmp(s->filename, rd[i].n) == 0) {
-					sprintf(buf,"{\"n\":\"%s%s\",\"v\":%s}",this_http,rd[i].n,rd[i].v);
-					SEND_STRING(&s->sout,buf);
-					break;
-				}
+			i = find_resource(s->filename);
+			if(i != -1) {
+				sprintf(s->http_output_payload,"{\"n\":\"%s\",\"v\":%s}",rd[i].n,rd[i].v);
+			} else {
+				s->http_header = HTTP_HEADER_404;
+				sprintf(s->http_output_payload, "{}");
 			}
 		}
 
@@ -225,55 +229,42 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 				if(pch != NULL && strcmp(pch, "v") == 0) {
 					pch = strtok(NULL, "=");
 					if(pch != NULL) {
-						// FIXME: I tried to skip the "/", not sure if it works
-						char *resource = rd[i].n;
-						resource += 1;
+						put_resource = rd[i].n;
+						put_value = pch;
 						coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-  					coap_set_header_uri_path(request, resource);
-						sprintf(buf, "v=%s", pch);
+  					coap_set_header_uri_path(request, put_resource+1);
+						sprintf(buf, "v=%s", put_value);
   					coap_set_header_uri_query(request, buf);
 						//COAP_BLOCKING_REQUEST(&(rd[i].address), PUT_SENSOR_PORT, request, client_put_handler);
-					}	else
-						SEND_STRING(&s->sout,"{\"message\" : \"missing parameter's value\"}");
-				} else
-					SEND_STRING(&s->sout,"{\"message\" : \"invalid parameters\"}");
-			} else
-				SEND_STRING(&s->sout,"{\"message\" : \"missing parameters\"}");
-		} else
-			SEND_STRING(&s->sout,"{\"message\" : \"resource not found\"}");
+						s->http_header = coap_success ? HTTP_HEADER_200 : HTTP_HEADER_502;
+						sprintf(s->http_output_payload, "{}");
+					}	else {
+						s->http_header = HTTP_HEADER_400;
+						sprintf(s->http_output_payload, "{}");
+					}
+				} else {
+					s->http_header = HTTP_HEADER_400;
+					sprintf(s->http_output_payload, "{}");
+				}
+			} else {
+				s->http_header = HTTP_HEADER_400;
+				sprintf(s->http_output_payload, "{}");
+			}
+		} else {
+			s->http_header = HTTP_HEADER_404;
+			sprintf(s->http_output_payload, "{}");
+		}
 	}
-
-  PSOCK_END(&s->sout);
 }
 /*---------------------------------------------------------------------------*/
 httpd_simple_script_t
 httpd_simple_get_script(const char *name)
 {
-
   return generate_routes;
 }
 
 #endif /* WEBSERVER */
 
-/*---------------------------------------------------------------------------*/
-static void
-print_local_addresses(void)
-{
-  int i;
-  uint8_t state;
-
-  PRINTA("Server IPv6 addresses:\n");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      PRINTA(" ");
-      uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTA("\n");
-    }
-  }
-}
-/*---------------------------------------------------------------------------*/
 void
 request_prefix(void)
 {
@@ -298,8 +289,7 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
 {
-  static struct etimer et;
-  static struct etimer ledETimer;
+  static struct etimer et, ledETimer;
   rpl_dag_t *dag;
 
   PROCESS_BEGIN();
@@ -314,7 +304,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   PROCESS_PAUSE();
 
-  //PRINTF("RPL-Border router started\n");
+  PRINTF("RPL-Border router started\n");
 #if 0
    /* The border router runs with a 100% duty cycle in order to ensure high
      packet reception rates.
@@ -333,7 +323,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   dag = rpl_set_root(RPL_DEFAULT_INSTANCE,(uip_ip6addr_t *)dag_id);
   if(dag != NULL) {
     rpl_set_prefix(dag, &prefix, 64);
-    //PRINTF("created a new RPL dag\n");
+    PRINTF("created a new RPL dag\n");
   }
 
   /* Now turn the radio on, but disable radio duty cycling.
@@ -347,11 +337,11 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   etimer_set(&ledETimer, CLOCK_SECOND >> 1);
 
-  /*while(1) {
+  while(1) {
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ledETimer));
     etimer_restart(&ledETimer);
     leds_toggle(LEDS_GREEN);
-  }*/
+  }
 
 	// Initialize CoAP client
 	coap_receiver_init();
@@ -363,3 +353,51 @@ PROCESS_THREAD(border_router_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+/*static int
+handle_request(struct psock *ps)
+{
+  PSOCK_BEGIN(ps);
+
+  PSOCK_SEND_STR(ps, "POST /resources/onUpdate HTTP/1.0\n");
+  PSOCK_SEND_STR(ps, "Content-type: application/json\n");
+  PSOCK_SEND_STR(ps, "\n");
+	PSOCK_SEND_STR(ps, "[{\"n\":\"/light\",\"v\":0.35}]\n");
+  
+  PSOCK_END(ps);
+}
+
+PROCESS_THREAD(button_on_update_process, ev, data)
+{
+	PROCESS_BEGIN();
+
+	static struct psock ps;
+	static char buffer[128];
+	static uip_ip6addr_t webapp;
+	uip_ip6addr(&webapp, 0xaaaa,0,0,0,0,0,0,1);
+
+  SENSORS_ACTIVATE(button_sensor);
+  while(1) {
+    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
+		
+		tcp_connect(&webapp, UIP_HTONS(80), NULL);
+		printf("Connecting...\n");
+		PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
+		if(uip_aborted() || uip_timedout() || uip_closed()) {
+			printf("Could not establish connection\n");
+		} else if(uip_connected()) {
+			printf("Connected.\n");
+
+			PSOCK_INIT(&ps, buffer, sizeof(buffer));
+
+			do {
+				handle_request(&ps);
+				PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
+			} while(!(uip_closed() || uip_aborted() || uip_timedout()));
+
+			PSOCK_CLOSE(&ps);
+
+			printf("Connection close.\n");
+		}
+  }
+  PROCESS_END();
+}*/
