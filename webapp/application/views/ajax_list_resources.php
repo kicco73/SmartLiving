@@ -38,13 +38,13 @@
 <script>
 
 $(document).ready(function() {
-	$(".new .switch").click(ajaxSwitchToggle);
-	$(".new .dimmer").slider({min: 0, max: 1, step:0.05, change: ajaxDimmerChange}).each(function() {
+	$(".new .switch").click(resource.ajaxSwitchToggle);
+	$(".new .dimmer").slider({min: 0, max: 1, step:0.05, change: resource.ajaxDimmerChange}).each(function() {
 		$(this).slider("value", $(this).attr("data"));
 	});
-	$(".new .sensor").click(ajaxSensorRefresh);
-	$(".new .remove").click(ajaxResourceRemove);
-	$(".new .editable").editable(ajaxSet);
+	$(".new .sensor").click(resource.ajaxSensorRefresh);
+	$(".new .remove").click(resource.ajaxRemove);
+	$(".new .editable").editable(resource.ajaxSet);
 	$(".new .chart").fancybox({
 		type : 'iframe',
     	openEffect	: 'elastic',

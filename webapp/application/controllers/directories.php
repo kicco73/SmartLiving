@@ -42,7 +42,7 @@ class Directories extends CI_Controller {
 		$this->load->view('list_directories', array("directories" => $directories));
 	}
 	
-	public function ajaxDirectoryRefresh($id) {
+	public function ajaxRefresh($id) {
 		$directory = $this->Directory_model->get($id);
 		$b = $directory->url;
 		$rv = $this->_restGet($b."/");
@@ -57,7 +57,7 @@ class Directories extends CI_Controller {
 		}
 	}
 	
-	public function ajaxDirectoryRemove($id) {
+	public function ajaxRemove($id) {
 		$directory = $this->Directory_model->get($id);
 		$this->Directory_model->delete($id);
 		$this->output->set_status_header('204'); // no content	

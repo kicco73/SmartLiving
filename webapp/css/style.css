@@ -3,7 +3,7 @@ html {
 }
 
 .smallButton {
-  background-color: black;
+  background-color: rgba(0,0,0,0.75);
   color: white;
   text-transform: lowercase;
   padding-left: 5px;
@@ -15,6 +15,13 @@ html {
   cursor: pointer;
 }
 
+.smallButton:hover {
+  background-color: black;
+  -webkit-box-shadow: 0px 0px 20px 0px rgba(255, 255, 255, 0.75);
+  -moz-box-shadow:    0px 0px 20px 0px rgba(255, 255, 255, 0.75);
+  box-shadow:         0px 0px 20px 0px rgba(255, 255, 255, 0.75);
+}
+
 .editable {
   cursor: pointer;
 }
@@ -22,16 +29,8 @@ html {
 .toolbar {
   float: right;
   position: relative;
-  right: 13px;
-  top: -55px;
-}
-
-.refreshDirectory {
-   background-image: url(/images/refreshDirectory.png) !important;
-   background-position: center center;
-   background-repeat: no-repeat !important;
-   width: 32px;
-   height: 32px;
+  right: 33px;
+  top: -48px;
 }
 
 table {

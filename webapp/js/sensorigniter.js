@@ -1,4 +1,5 @@
-function ajaxSwitchToggle() {
+var resource = {
+  ajaxSwitchToggle: function() {
 	var button = $(this);
 	var rel = button.attr("rel");
 	$.getJSON("/resources/ajaxSwitchToggle/"+rel, function(data) {
@@ -7,9 +8,9 @@ function ajaxSwitchToggle() {
 	}).error(function() {
 		alert("Cannot toggle switch");
 	});
-}
+  },
 
-function ajaxDimmerChange() {
+  ajaxDimmerChange: function() {
 	var dimmer = $(this);
 	var rel = dimmer.attr("rel");
 	var old = parseFloat(dimmer.attr("data"));
@@ -21,9 +22,9 @@ function ajaxDimmerChange() {
 		}).error(function() {
 			alert("Cannot change dimmer value");
 		});
-}
+  },
 
-function ajaxSensorRefresh() {
+  ajaxSensorRefresh: function() {
 	var sensor = $(this);
 	var rel = sensor.attr("rel");
 	$.getJSON("/resources/ajaxSensorRefresh/"+rel, function(data) {
@@ -31,29 +32,18 @@ function ajaxSensorRefresh() {
 	}).error(function() {
 		alert("Cannot refresh sensor value");
 	});
-}
+  },
 
-function ajaxResourceRemove() {
+  ajaxRemove: function() {
 	var sensor = $(this);
 	var rel = sensor.attr("rel");
-	$.getJSON("/resources/ajaxResourceRemove/"+rel, function(data) {
+	$.getJSON("/resources/ajaxRemove/"+rel, function(data) {
 		sensor.closest('.resource').remove();
 	}).error(function() {
 		alert("Cannot remove resource");
 	});
-}
-
-function ajaxDirectoryRemove() {
-	var sensor = $(this);
-	var rel = sensor.attr("rel");
-	$.getJSON("/directory/ajaxDirectoryRemove/"+rel, function(data) {
-		sensor.closest('.directory').remove();
-	}).error(function() {
-		alert("Cannot remove resource directory");
-	});
-}
-
-function ajaxSet(val, settings) {
+  },
+  ajaxSet: function(val, settings) {
 	var div = $(this);
 	var rel = div.attr("rel");
 	var field = div.attr("data");
@@ -61,16 +51,42 @@ function ajaxSet(val, settings) {
 		alert("Cannot set "+field+" value");
 	});
 	return val;
-}
+  }
+};
 
-function ajaxDirectoryRefresh() {
+var directory = {
+  ajaxRefresh: function() {
 	var div = $(this);
 	var rel = div.attr("rel");
-	$.ajax("/directories/ajaxDirectoryRefresh/"+rel)
+	$.ajax("/directories/ajaxRefresh/"+rel)
 		.success(function(data) {
 			div.closest(".directory").find(".resources").replaceWith(data);
 		})
 		.error(function(x) {
 			alert("Cannot refresh resource directory");
 		});
-}
+  },
+
+  ajaxRemove: function() {
+	var sensor = $(this);
+	var rel = sensor.attr("rel");
+	$.getJSON("/directories/ajaxRemove/"+rel, function(data) {
+		sensor.closest('.directory').remove();
+	}).error(function() {
+		alert("Cannot remove resource directory");
+	});
+  },
+
+  ajaxSet: function() {
+	var div = $(this);
+	var rel = div.attr("rel");
+	var field = div.attr("data");
+	$.post("/directories/ajaxSet/"+rel, {field: field, value: val}).error(function() {
+		alert("Cannot set "+field+" value for directory");
+	});
+	return val;
+  }
+
+};
+
+
