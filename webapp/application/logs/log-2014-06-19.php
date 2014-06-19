@@ -175,3 +175,33 @@ ERROR - 2014-06-19 20:51:16 --> input data [{"v":1,"n":"/fan"}]
 ERROR - 2014-06-19 20:51:16 --> input data [{"v":1,"n":"/fan"}]
 ERROR - 2014-06-19 20:54:24 --> input data [{"v":1,"n":"/fan"}]
 ERROR - 2014-06-19 20:56:09 --> input data [{"v":1,"n":"/fan"}]
+ERROR - 2014-06-19 21:17:07 --> Severity: Notice  --> Undefined variable: rentry /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 30
+ERROR - 2014-06-19 21:17:07 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 30
+ERROR - 2014-06-19 21:17:07 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 13
+ERROR - 2014-06-19 21:17:07 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 47
+ERROR - 2014-06-19 21:17:07 --> resource directory unreachable
+ERROR - 2014-06-19 21:17:07 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:18:35 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:18:35 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:19:07 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:19:07 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:19:09 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:19:09 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:19:15 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:19:15 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:19:23 --> Severity: Warning  --> mysqli_connect(): (HY000/2003): Can't connect to MySQL server on '127.0.0.1' (61) /Users/kicco/Documents/SmartLiving/webapp/system/database/drivers/mysqli/mysqli_driver.php 76
+ERROR - 2014-06-19 21:19:23 --> Unable to connect to the database
+ERROR - 2014-06-19 21:19:24 --> Severity: Warning  --> mysqli_connect(): (HY000/2003): Can't connect to MySQL server on '127.0.0.1' (61) /Users/kicco/Documents/SmartLiving/webapp/system/database/drivers/mysqli/mysqli_driver.php 76
+ERROR - 2014-06-19 21:19:24 --> Unable to connect to the database
+ERROR - 2014-06-19 21:19:26 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:19:26 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:19:30 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:19:30 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:20:07 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:20:07 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:20:08 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:20:08 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:21:01 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:21:01 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:21:02 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:21:02 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21

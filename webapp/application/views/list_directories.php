@@ -17,7 +17,7 @@
 <?php } ?>
 
 	<div class="body directory">
-		<div class="smallButton addDirectory" rel="<?php echo $directory->id; ?>" title="Add new resource directory">Add</div>
+		<div class="smallButton addDirectory" title="Add new resource directory">Add</div>
 		<input class="addDirectory"></input>
 	</div>
 

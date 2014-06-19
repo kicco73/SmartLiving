@@ -73,8 +73,8 @@ class Directories extends CI_Controller {
 		if(!$ok) {
 			$this->output->set_status_header('500', "field must be in the form http://hostname/path");
 		} else {
-			$this->Directory_model->insert_or_update_by_url($url);
-			$this->output->set_status_header('204'); // no content	
+			$id = $this->Directory_model->insert_or_update_by_url($url);
+			$this->ajaxRefresh($id);
 		}
 	}
 	
