@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
 	<meta charset="utf-8">
 	<title>SensorIgniter</title>
@@ -12,3 +14,8 @@
 </head>
 <body>
 
+<div class="container">
+	<h1>Sensor<b>Igniter</b></h1>
+	<p class="footer"><strong>GroupA</strong> &copy; 2014 I. Belluco, E. Carniani, G. Peterle, F. Ricci</p>
+
+</div>

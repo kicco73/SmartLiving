@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.5.33)
 # Database: groupA
-# Generation Time: 2014-06-19 07:47:04 +0000
+# Generation Time: 2014-06-19 09:15:12 +0000
 # ************************************************************
 
 
@@ -18,6 +18,32 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+
+# Dump of table Directory
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `Directory`;
+
+CREATE TABLE `Directory` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `url` varchar(255) NOT NULL DEFAULT '',
+  `description` varchar(255) NOT NULL DEFAULT '',
+  `name` varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `url` (`url`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+LOCK TABLES `Directory` WRITE;
+/*!40000 ALTER TABLE `Directory` DISABLE KEYS */;
+
+INSERT INTO `Directory` (`id`, `url`, `description`, `name`)
+VALUES
+	(1,'http://localhost:8888/resources/fake_rd','',''),
+	(2,'http://localhost:8888/resources/fake_rd_1','','');
+
+/*!40000 ALTER TABLE `Directory` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 # Dump of table Resource
@@ -44,9 +70,9 @@ LOCK TABLES `Resource` WRITE;
 
 INSERT INTO `Resource` (`id`, `name`, `description`, `currentValue`, `resType`, `unit`, `timestamp`, `url`)
 VALUES
-	(41,'Dimmer','Descrizione del dimmer',0.000,'dimmer','lux','2014-06-19 09:32:24','http://localhost:8888/resources/fake_rd/light'),
-	(43,'Accelerometer','Descrizione dell\'accelerometro',0.500,'sensor','m/s^2','2014-06-19 09:32:24','http://localhost:8888/resources/fake_rd/accelerometer'),
-	(47,'Fan','Questo è un ventilatore',0.000,'switch','','2014-06-19 09:41:53','http://localhost:8888/resources/fake_rd/fan');
+	(41,'Dimmer','Descrizione del dimmer',0.450,'dimmer','lux','2014-06-19 09:32:24','http://localhost:8888/resources/fake_rd/light'),
+	(43,'dAccelerometer','Descrizione dell\'accelerometro',0.500,'sensor','m/s^2','2014-06-19 09:32:24','http://localhost:8888/resources/fake_rd/accelerometer'),
+	(47,'Fan...','Questo è un ventilatore',0.000,'switch','','2014-06-19 09:41:53','http://localhost:8888/resources/fake_rd/fan');
 
 /*!40000 ALTER TABLE `Resource` ENABLE KEYS */;
 UNLOCK TABLES;

@@ -1,4 +1,4 @@
-function ajaxSwitchToggle(button) {
+function ajaxSwitchToggle() {
 	var button = $(this);
 	var rel = button.attr("rel");
 	$.getJSON("/resources/ajaxSwitchToggle/"+rel, function(data) {
@@ -9,7 +9,7 @@ function ajaxSwitchToggle(button) {
 	});
 }
 
-function ajaxDimmerChange(dimmer) {
+function ajaxDimmerChange() {
 	var dimmer = $(this);
 	var rel = dimmer.attr("rel");
 	var old = parseFloat(dimmer.attr("data"));
@@ -23,7 +23,7 @@ function ajaxDimmerChange(dimmer) {
 		});
 }
 
-function ajaxSensorRefresh(sensor) {
+function ajaxSensorRefresh() {
 	var sensor = $(this);
 	var rel = sensor.attr("rel");
 	$.getJSON("/resources/ajaxSensorRefresh/"+rel, function(data) {
@@ -33,13 +33,23 @@ function ajaxSensorRefresh(sensor) {
 	});
 }
 
-function ajaxResourceRemove(resource) {
+function ajaxResourceRemove() {
 	var sensor = $(this);
 	var rel = sensor.attr("rel");
 	$.getJSON("/resources/ajaxResourceRemove/"+rel, function(data) {
 		sensor.closest('.resource').remove();
 	}).error(function() {
 		alert("Cannot remove resource");
+	});
+}
+
+function ajaxDirectoryRemove() {
+	var sensor = $(this);
+	var rel = sensor.attr("rel");
+	$.getJSON("/directory/ajaxDirectoryRemove/"+rel, function(data) {
+		sensor.closest('.directory').remove();
+	}).error(function() {
+		alert("Cannot remove resource directory");
 	});
 }
 
@@ -51,4 +61,16 @@ function ajaxSet(val, settings) {
 		alert("Cannot set "+field+" value");
 	});
 	return val;
+}
+
+function ajaxDirectoryRefresh() {
+	var div = $(this);
+	var rel = div.attr("rel");
+	$.ajax("/directories/ajaxDirectoryRefresh/"+rel)
+		.success(function(data) {
+			div.parent().find(".resources").replaceWith(data);
+		})
+		.error(function(x) {
+			alert("Cannot refresh resource directory");
+		});
 }
