@@ -48,7 +48,7 @@ class Directories extends CI_Controller {
 		$rv = $this->_restGet($b."/");
 		if($rv != false) {
 			foreach($rv as $r) 
-				$this->Resource_model->insert_or_update_by_url($id, $b.$r->n, $r->v, $r->u, $r->rt);
+				$this->Resource_model->insert_or_update_by_url($id, $r->n, $r->v, $r->u, $r->rt);
 			$resources = $this->Resource_model->list_by_directory($id);
 			$this->load->view('ajax_list_resources', array("resources" => $resources));
 		} else {

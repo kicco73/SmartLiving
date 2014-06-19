@@ -205,3 +205,135 @@ ERROR - 2014-06-19 21:21:01 --> Severity: Notice  --> Undefined variable: direct
 ERROR - 2014-06-19 21:21:01 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
 ERROR - 2014-06-19 21:21:02 --> Severity: Notice  --> Undefined variable: directory /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
 ERROR - 2014-06-19 21:21:02 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/views/list_directories.php 21
+ERROR - 2014-06-19 21:22:38 --> Severity: Notice  --> Undefined variable: rentry /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 30
+ERROR - 2014-06-19 21:22:38 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 30
+ERROR - 2014-06-19 21:22:38 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 13
+ERROR - 2014-06-19 21:22:38 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 47
+ERROR - 2014-06-19 21:22:38 --> resource directory unreachable
+ERROR - 2014-06-19 21:22:38 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:23:52 --> 404 Page Not Found --> directories/fake_d
+ERROR - 2014-06-19 21:23:52 --> Severity: Warning  --> fopen(http://127.0.0.1:8888/directories/fake_d/): failed to open stream: HTTP request failed! HTTP/1.0 404 Not Found
+ /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 17
+ERROR - 2014-06-19 21:23:52 --> http://127.0.0.1:8888/directories/fake_d/: stream is not resource
+ERROR - 2014-06-19 21:23:52 --> resource directory unreachable
+ERROR - 2014-06-19 21:23:58 --> 404 Page Not Found --> directories/fake_
+ERROR - 2014-06-19 21:23:58 --> Severity: Warning  --> fopen(http://127.0.0.1:8888/directories/fake_/): failed to open stream: HTTP request failed! HTTP/1.0 404 Not Found
+ /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 17
+ERROR - 2014-06-19 21:23:58 --> http://127.0.0.1:8888/directories/fake_/: stream is not resource
+ERROR - 2014-06-19 21:23:58 --> resource directory unreachable
+ERROR - 2014-06-19 21:24:04 --> 404 Page Not Found --> directorie
+ERROR - 2014-06-19 21:24:04 --> Severity: Warning  --> fopen(http://127.0.0.1:8888/directorie/): failed to open stream: HTTP request failed! HTTP/1.0 404 Not Found
+ /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 17
+ERROR - 2014-06-19 21:24:04 --> http://127.0.0.1:8888/directorie/: stream is not resource
+ERROR - 2014-06-19 21:24:04 --> resource directory unreachable
+ERROR - 2014-06-19 21:24:10 --> resource directory unreachable
+ERROR - 2014-06-19 21:24:15 --> Severity: Warning  --> fopen(http://127.0.0.1:/): failed to open stream: Connection refused /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 17
+ERROR - 2014-06-19 21:24:15 --> http://127.0.0.1:/: stream is not resource
+ERROR - 2014-06-19 21:24:15 --> resource directory unreachable
+ERROR - 2014-06-19 21:24:19 --> Severity: Notice  --> Undefined variable: rentry /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 30
+ERROR - 2014-06-19 21:24:19 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 30
+ERROR - 2014-06-19 21:24:19 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 13
+ERROR - 2014-06-19 21:24:19 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/controllers/directories.php 47
+ERROR - 2014-06-19 21:24:19 --> resource directory unreachable
+ERROR - 2014-06-19 21:24:19 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:26:02 --> input data [{"v":1,"n":"/fan"}]
+ERROR - 2014-06-19 21:26:05 --> input data [{"v":1,"n":"/fan"}]
+ERROR - 2014-06-19 21:26:06 --> input data [{"v":1,"n":"/fan"}]
+ERROR - 2014-06-19 21:26:06 --> input data [{"v":1,"n":"/fan"}]
+ERROR - 2014-06-19 21:26:06 --> input data [{"v":1,"n":"/fan"}]
+ERROR - 2014-06-19 21:26:06 --> input data [{"v":1,"n":"/fan"}]
+ERROR - 2014-06-19 21:26:06 --> input data [{"v":1,"n":"/fan"}]
+ERROR - 2014-06-19 21:26:07 --> input data [{"v":1,"n":"/fan"}]
+ERROR - 2014-06-19 21:35:51 --> Severity: Warning  --> fopen(/fan?v=1): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:35:51 --> /fan?v=1: stream is not resource
+ERROR - 2014-06-19 21:35:51 --> resource directory unreachable
+ERROR - 2014-06-19 21:38:38 --> Severity: Warning  --> fopen(/fan?v=1): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:38:38 --> /fan?v=1: stream is not resource
+ERROR - 2014-06-19 21:38:38 --> resource directory unreachable
+ERROR - 2014-06-19 21:38:40 --> Severity: Warning  --> fopen(/light?v=0.35): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:38:40 --> /light?v=0.35: stream is not resource
+ERROR - 2014-06-19 21:38:40 --> resource directory unreachable
+ERROR - 2014-06-19 21:38:44 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 13
+ERROR - 2014-06-19 21:38:44 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 75
+ERROR - 2014-06-19 21:38:44 --> Severity: Warning  --> fopen(/accelerometer): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:38:44 --> /accelerometer: stream is not resource
+ERROR - 2014-06-19 21:38:44 --> resource directory unreachable
+ERROR - 2014-06-19 21:38:44 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:38:49 --> Severity: Notice  --> Undefined offset: 0 /Users/kicco/Documents/SmartLiving/webapp/application/models/directory_model.php 13
+ERROR - 2014-06-19 21:38:49 --> Severity: Notice  --> Trying to get property of non-object /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 75
+ERROR - 2014-06-19 21:38:49 --> Severity: Warning  --> fopen(/accelerometer): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:38:49 --> /accelerometer: stream is not resource
+ERROR - 2014-06-19 21:38:49 --> resource directory unreachable
+ERROR - 2014-06-19 21:38:49 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:41:03 --> Severity: Notice  --> Use of undefined constant url - assumed 'url' /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 51
+ERROR - 2014-06-19 21:41:03 --> Severity: Warning  --> fopen(url): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:41:03 --> url: stream is not resource
+ERROR - 2014-06-19 21:41:03 --> Severity: Warning  --> fopen(url?v=1): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:41:03 --> url?v=1: stream is not resource
+ERROR - 2014-06-19 21:41:03 --> resource directory unreachable
+ERROR - 2014-06-19 21:41:03 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:41:05 --> Severity: Notice  --> Use of undefined constant url - assumed 'url' /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 51
+ERROR - 2014-06-19 21:41:05 --> Severity: Warning  --> fopen(/light?v=0.3): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:41:05 --> /light?v=0.3: stream is not resource
+ERROR - 2014-06-19 21:41:05 --> resource directory unreachable
+ERROR - 2014-06-19 21:41:05 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:41:08 --> Severity: Notice  --> Use of undefined constant url - assumed 'url' /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 51
+ERROR - 2014-06-19 21:41:08 --> Severity: Warning  --> fopen(url): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:41:08 --> url: stream is not resource
+ERROR - 2014-06-19 21:41:08 --> resource directory unreachable
+ERROR - 2014-06-19 21:41:08 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:41:12 --> Severity: Notice  --> Use of undefined constant url - assumed 'url' /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 51
+ERROR - 2014-06-19 21:41:12 --> Severity: Warning  --> fopen(url): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:41:12 --> url: stream is not resource
+ERROR - 2014-06-19 21:41:12 --> resource directory unreachable
+ERROR - 2014-06-19 21:41:12 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:41:18 --> Severity: Notice  --> Use of undefined constant url - assumed 'url' /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 51
+ERROR - 2014-06-19 21:41:18 --> Severity: Warning  --> fopen(url): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:41:18 --> url: stream is not resource
+ERROR - 2014-06-19 21:41:18 --> resource directory unreachable
+ERROR - 2014-06-19 21:41:18 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:41:36 --> Severity: Notice  --> Use of undefined constant url - assumed 'url' /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 51
+ERROR - 2014-06-19 21:41:36 --> Severity: Warning  --> fopen(url): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:41:36 --> url: stream is not resource
+ERROR - 2014-06-19 21:41:36 --> Severity: Warning  --> fopen(url?v=1): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:41:36 --> url?v=1: stream is not resource
+ERROR - 2014-06-19 21:41:36 --> resource directory unreachable
+ERROR - 2014-06-19 21:41:36 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:41:40 --> Severity: Notice  --> Use of undefined constant url - assumed 'url' /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 51
+ERROR - 2014-06-19 21:41:40 --> Severity: Warning  --> fopen(url): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:41:40 --> url: stream is not resource
+ERROR - 2014-06-19 21:41:40 --> resource directory unreachable
+ERROR - 2014-06-19 21:41:40 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:41:52 --> Severity: Notice  --> Use of undefined constant url - assumed 'url' /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 51
+ERROR - 2014-06-19 21:41:52 --> Severity: Warning  --> fopen(url): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:41:52 --> url: stream is not resource
+ERROR - 2014-06-19 21:41:52 --> resource directory unreachable
+ERROR - 2014-06-19 21:41:52 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:42:18 --> Severity: Warning  --> fopen(/light?v=0.5): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:42:18 --> /light?v=0.5: stream is not resource
+ERROR - 2014-06-19 21:42:18 --> resource directory unreachable
+ERROR - 2014-06-19 21:42:23 --> Severity: Warning  --> fopen(/light?v=0.4): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:42:23 --> /light?v=0.4: stream is not resource
+ERROR - 2014-06-19 21:42:23 --> resource directory unreachable
+ERROR - 2014-06-19 21:42:41 --> Severity: Warning  --> fopen(/light?v=0.5): failed to open stream: No such file or directory /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 17
+ERROR - 2014-06-19 21:42:41 --> /light?v=0.5: stream is not resource
+ERROR - 2014-06-19 21:42:41 --> resource directory unreachable
+ERROR - 2014-06-19 21:42:52 --> Severity: Warning  --> mysqli_connect(): (HY000/2003): Can't connect to MySQL server on '127.0.0.1' (61) /Users/kicco/Documents/SmartLiving/webapp/system/database/drivers/mysqli/mysqli_driver.php 76
+ERROR - 2014-06-19 21:42:52 --> Unable to connect to the database
+ERROR - 2014-06-19 21:46:22 --> input data 
+ERROR - 2014-06-19 21:46:22 --> Severity: Warning  --> Invalid argument supplied for foreach() /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 104
+ERROR - 2014-06-19 21:46:22 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:47:46 --> input data 
+ERROR - 2014-06-19 21:47:53 --> input data []
+ERROR - 2014-06-19 21:48:01 --> input data [{}]
+ERROR - 2014-06-19 21:48:01 --> Severity: Notice  --> Undefined property: stdClass::$n /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 106
+ERROR - 2014-06-19 21:48:01 --> Severity: Notice  --> Undefined property: stdClass::$v /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 106
+ERROR - 2014-06-19 21:48:01 --> Severity: Notice  --> Undefined property: stdClass::$n /Users/kicco/Documents/SmartLiving/webapp/application/controllers/resources.php 108
+ERROR - 2014-06-19 21:48:01 --> Severity: Warning  --> Cannot modify header information - headers already sent by (output started at /Users/kicco/Documents/SmartLiving/webapp/system/core/Exceptions.php:185) /Users/kicco/Documents/SmartLiving/webapp/system/core/Common.php 442
+ERROR - 2014-06-19 21:48:26 --> input data [{'n':'/accelerometer','v':0.1}]
+ERROR - 2014-06-19 21:48:31 --> input data [{'n':'/accelerometer','v':0.1}]
+ERROR - 2014-06-19 21:48:45 --> input data [{"n":"/accelerometer","v":0.1}]
+ERROR - 2014-06-19 21:48:47 --> input data [{"n":"/accelerometer","v":0.1}]
+ERROR - 2014-06-19 21:48:48 --> input data [{"n":"/accelerometer","v":0.1}]
+ERROR - 2014-06-19 21:48:48 --> input data [{"n":"/accelerometer","v":0.1}]
+ERROR - 2014-06-19 21:48:54 --> input data [{"n":"/accelerometer","v":0.12}]
