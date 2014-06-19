@@ -2,6 +2,13 @@ html {
 	background-color: #eee;
 }
 
+input.addDirectory {
+  float: right;
+  font-size: 9.5px;
+  margin-right: 10px;
+  width: 300px;
+}
+
 .smallButton {
   background-color: rgba(0,0,0,0.75);
   color: white;

@@ -63,10 +63,19 @@ class Directories extends CI_Controller {
 		$this->output->set_status_header('204'); // no content	
 	}
 	
-	public function ajaxAdd($id) {
+	public function url_check($input) {
+		return $ok;
+	}
+	
+	public function ajaxAdd() {
 		$url = $this->input->post('url', TRUE);
-		$directory = $this->Directory_model->insert_or_update_by_url($url);
-		$this->output->set_status_header('204'); // no content	
+		$ok = preg_match("/^http:\/(\/[^\/]+)+$/i", $url, $matches);
+		if(!$ok) {
+			$this->output->set_status_header('500', "field must be in the form http://hostname/path");
+		} else {
+			$this->Directory_model->insert_or_update_by_url($url);
+			$this->output->set_status_header('204'); // no content	
+		}
 	}
 	
 	public function ajaxSet($id) {

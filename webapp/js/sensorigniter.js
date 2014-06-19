@@ -77,6 +77,16 @@ var directory = {
 	});
   },
 
+  ajaxAdd: function() {
+	var div = $(this);
+	var url = div.closest(".directory").find("input.addDirectory").val();
+	$.post("/directories/ajaxAdd", {url: url}).success(function(data) {
+		window.location = window.location;
+	}).error(function() {
+		alert("Must be in format http://hostname[/path]");
+	});
+  },
+
   ajaxSet: function() {
 	var div = $(this);
 	var rel = div.attr("rel");
