@@ -39,8 +39,8 @@ LOCK TABLES `Directory` WRITE;
 
 INSERT INTO `Directory` (`id`, `url`, `description`, `name`)
 VALUES
-	(1,'http://localhost:8888/resources/fake_rd','',''),
-	(2,'http://localhost:8888/resources/fake_rd_1','','');
+	(1,'http://localhost/resources/fake_rd','',''),
+	(2,'http://localhost/resources/fake_rd_1','','');
 
 /*!40000 ALTER TABLE `Directory` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -61,7 +61,6 @@ CREATE TABLE `Resource` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `url` varchar(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`),
   UNIQUE KEY `url` (`url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -70,9 +69,9 @@ LOCK TABLES `Resource` WRITE;
 
 INSERT INTO `Resource` (`id`, `name`, `description`, `currentValue`, `resType`, `unit`, `timestamp`, `url`)
 VALUES
-	(41,'Dimmer','Descrizione del dimmer',0.450,'dimmer','lux','2014-06-19 09:32:24','http://localhost:8888/resources/fake_rd/light'),
-	(43,'dAccelerometer','Descrizione dell\'accelerometro',0.500,'sensor','m/s^2','2014-06-19 09:32:24','http://localhost:8888/resources/fake_rd/accelerometer'),
-	(47,'Fan...','Questo è un ventilatore',0.000,'switch','','2014-06-19 09:41:53','http://localhost:8888/resources/fake_rd/fan');
+	(41,'Dimmer','Descrizione del dimmer',0.450,'dimmer','lux','2014-06-19 09:32:24','http://localhost/resources/fake_rd/light'),
+	(43,'dAccelerometer','Descrizione dell\'accelerometro',0.500,'sensor','m/s^2','2014-06-19 09:32:24','http://localhost/resources/fake_rd/accelerometer'),
+	(47,'Fan...','Questo è un ventilatore',0.000,'switch','','2014-06-19 09:41:53','http://localhost/resources/fake_rd/fan');
 
 /*!40000 ALTER TABLE `Resource` ENABLE KEYS */;
 UNLOCK TABLES;

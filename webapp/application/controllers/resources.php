@@ -50,7 +50,7 @@ class Resources extends CI_Controller {
 			$this->output->set_content_type('application/json')->set_output(json_encode($resource));
 		} else {
 			log_message('error', 'resource directory unreachable');
-			$this->output->set_status_header('500', 'resource directory unreachable');
+			$this->output->set_status_header('500', $resource->url.': resource directory unreachable');
 		}
 	}
 
@@ -63,7 +63,7 @@ class Resources extends CI_Controller {
 			$this->output->set_content_type('application/json')->set_output(json_encode($resource));
 		} else {
 			log_message('error', 'resource directory unreachable');
-			$this->output->set_status_header('500', 'resource directory unreachable');
+			$this->output->set_status_header('500', $resource->url.': resource directory unreachable');
 		}
 	}
 	
@@ -77,7 +77,7 @@ class Resources extends CI_Controller {
 			$this->output->set_content_type('application/json')->set_output(json_encode($resource));
 		} else {
 			log_message('error', 'resource directory unreachable');
-			$this->output->set_status_header('500', 'resource directory unreachable');
+			$this->output->set_status_header('500', $resource->url.': resource directory unreachable');
 		}
 	}
 	
