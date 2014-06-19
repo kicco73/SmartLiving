@@ -63,6 +63,12 @@ class Directories extends CI_Controller {
 		$this->output->set_status_header('204'); // no content	
 	}
 	
+	public function ajaxAdd($id) {
+		$url = $this->input->post('url', TRUE);
+		$directory = $this->Directory_model->insert_or_update_by_url($url);
+		$this->output->set_status_header('204'); // no content	
+	}
+	
 	public function ajaxSet($id) {
 		$field = $this->input->post('field', TRUE);
 		$value = $this->input->post('value', TRUE);

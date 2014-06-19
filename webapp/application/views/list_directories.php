@@ -16,11 +16,18 @@
 
 <?php } ?>
 
+	<div class="body directory">
+		<div class="smallButton addDirectory" rel="<?php echo $directory->id; ?>" title="Add new resource directory">Add</div>
+		<input class="addDirectory"></input>
+	</div>
+
 <script>
 
 $(document).ready(function() {
 	$(".refreshDirectory").click(directory.ajaxRefresh);
 	$(".removeDirectory").click(directory.ajaxRemove);
+	$("input.addDirectory").button().watermark("Http url of new resource directory");
+	$("div.addDirectory").click(directory.ajaxAdd);
 });
 
 </script>
