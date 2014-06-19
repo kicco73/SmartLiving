@@ -2,7 +2,7 @@ html {
 	background-color: #eee;
 }
 
-.remove {
+.smallButton {
   background-color: black;
   color: white;
   text-transform: lowercase;
@@ -12,6 +12,11 @@ html {
   border-radius: 5px;
   float: left;
   margin-right: 10px;
+  cursor: pointer;
+}
+
+.editable {
+  cursor: pointer;
 }
 
 .toolbar {
@@ -66,12 +71,17 @@ tr.even {
 	background-color: #adf;
 }
 
+.dimmer, .sensor {
+	cursor: pointer;
+}
+
 div.switch {
 	background-image: url(/images/switchOff.png);
 	background-repeat: no-repeat;
 	background-position: top left;
 	width: 35px;
 	height: 20px;
+	cursor: pointer;
 }
 
 div.switch.on {

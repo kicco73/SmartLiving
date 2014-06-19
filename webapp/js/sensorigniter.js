@@ -42,3 +42,13 @@ function ajaxResourceRemove(resource) {
 		alert("Cannot remove resource");
 	});
 }
+
+function ajaxSet(val, settings) {
+	var div = $(this);
+	var rel = div.attr("rel");
+	var field = div.attr("data");
+	$.post("/resources/ajaxSet/"+rel, {field: field, value: val}).error(function() {
+		alert("Cannot set "+field+" value");
+	});
+	return val;
+}

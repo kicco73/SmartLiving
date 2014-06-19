@@ -5,6 +5,7 @@
 	<link rel="stylesheet" href="/css/ui-lightness/jquery-ui-1.10.4.min.css">
 	<script src="/js/jquery-1.11.1.min.js"></script>
 	<script src="/js/jquery-ui-1.10.4.min.js"></script>
+	<script src="/js/jquery.jeditable.mini.js"></script>
 	<script src="/js/sensorigniter.js"></script>
     <script type="text/javascript" src="/js/fancybox/jquery.fancybox.pack.js?v=2.1.15"></script>
     <link rel="stylesheet" href="/js/fancybox/jquery.fancybox.css?v=2.1.15" type="text/css" media="screen" />

@@ -45,7 +45,7 @@ class Resources extends CI_Controller {
 	public function ajaxSwitchToggle($id) {
 		$resource = $this->Resource_model->get($id);
 		$resource->currentValue = $resource->currentValue > 0? 0 : 1;
-		if($this->_restPut($resource->name, $resource->currentValue)) {
+		if($this->_restPut($resource->url, $resource->currentValue)) {
 			$this->Resource_model->update($resource);
 			$this->output->set_content_type('application/json')->set_output(json_encode($resource));
 		} else {
@@ -57,8 +57,8 @@ class Resources extends CI_Controller {
 	public function ajaxDimmerChange($id, $val) {
 		$resource = $this->Resource_model->get($id);
 		$resource->currentValue = (float) $val;
-		$restUrl = $resource->name+"?v=".$resource->currentValue;
-		if($this->_restPut($resource->name, $resource->currentValue)) {
+		$restUrl = $resource->url+"?v=".$resource->currentValue;
+		if($this->_restPut($resource->url, $resource->currentValue)) {
 			$this->Resource_model->update($resource);
 			$this->output->set_content_type('application/json')->set_output(json_encode($resource));
 		} else {
@@ -69,7 +69,7 @@ class Resources extends CI_Controller {
 	
 	public function ajaxSensorRefresh($id) {
 		$resource = $this->Resource_model->get($id);
-		$rv = $this->_restGet($resource->name);
+		$rv = $this->_restGet($resource->url);
 		if($rv != false) {
 			$resource->currentValue = $rv->v;
 			$this->Resource_model->update($resource);
@@ -82,10 +82,11 @@ class Resources extends CI_Controller {
 	}
 	
 	public function ajaxResourceDirectoryRefresh() {
-		$rv = $this->_restGet($this->_rd_baseurl()."/");
+		$b = $this->_rd_baseurl();
+		$rv = $this->_restGet($b."/");
 		if($rv != false) {
 			foreach($rv as $r) 
-				$this->Resource_model->insert_or_update_by_name($r->n, $r->v, $r->u, $r->rt);
+				$this->Resource_model->insert_or_update_by_url($b.$r->n, $r->v, $r->u, $r->rt);
 			$resources = $this->Resource_model->list_all();
 			$this->load->view('ajax_list_resources', array("resources" => $resources));
 		} else {
@@ -96,13 +97,14 @@ class Resources extends CI_Controller {
 	
 	public function onUpdate() {
 		$method = strtolower($this->input->server('REQUEST_METHOD'));
+		$b = $this->_rd_baseurl();
 		switch($method) {
 		case 'post':
 			$input_data = trim(file_get_contents('php://input'));
 			log_message('error', 'input data '.$input_data);
 			$input_data = json_decode($input_data);
 			foreach($input_data as $r)
-				$this->Resource_model->add_sample($r->n, $r->v);
+				$this->Resource_model->add_sample($b.$r->n, $r->v);
 			$this->output->set_status_header('204'); // no content
 			break;
 		default:
@@ -116,34 +118,50 @@ class Resources extends CI_Controller {
 		$this->output->set_status_header('204'); // no content	
 	}
 	
+	public function ajaxSet($id) {
+		$field = $this->input->post('field', TRUE);
+		$value = $this->input->post('value', TRUE);
+		$resource = $this->Resource_model->get($id);
+		$resource->$field = $value;
+		$this->Resource_model->update($resource);
+		$this->output->set_status_header('204'); // no content	
+	}
+	
 	public function chart($id) {
 		$resource = $this->Resource_model->get($id);
 		$samples = $this->Resource_model->list_all_samples($id);
 		$this->load->view("chart", array("resource" => $resource, "samples" =>$samples));
 	}
 	
+	public function notifier() {
+		// TODO
+	}
+	
 	private function _rd_baseurl() {
+		// NO TRAILING SLASH!
 		return $this->config->base_url()."resources/fake_rd";
 	}
 	
 	public function fake_rd() {
-		$method = strtolower($this->input->server('REQUEST_METHOD'));
-		$b = $this->_rd_baseurl();
+		$method = strtoupper($this->input->server('REQUEST_METHOD'));
 		switch($method) {
-		case 'put':
+		case 'PUT':
+			// Update resource value
 			$value = (float) $this->input->get('v', TRUE);
 			$this->output->set_status_header('204'); // no content
 			break;
-		case 'get':
+		case 'GET':
 			$n = "/".join("/", func_get_args());
 			if($n == "/") {
+				// Read whole resource directory
 				$rv = array(
-					array("n" => $b."/fan", "v" => 0.0, "u" => "", "rt" => "switch"),
-					array("n" => $b."/light", "v" => 0.0, "u" => "lux", "rt" => "dimmer"),
-					array("n" => $b."/accelerometer", "v" => 0.0, "u" => "m/s^2", "rt" => "sensor")
+					array("n" => "/fan", "v" => 0.0, "u" => "", "rt" => "switch"),
+					array("n" => "/light", "v" => 0.0, "u" => "lux", "rt" => "dimmer"),
+					array("n" => "/accelerometer", "v" => 0.0, "u" => "m/s^2", "rt" => "sensor")
 				);
 			} else 
-				$rv = array("n" => $b.$n, "v" => 0.5);
+				// Read just one value
+				$rv = array("n" => $n, "v" => 0.5);
 			$this->output->set_content_type('application/json')
 						 ->set_status_header('200') // ok
 						 ->set_output(json_encode($rv));

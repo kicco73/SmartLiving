@@ -1,6 +1,7 @@
 		<table class="resources">
 			<thead>
 				<th class="value"></th>
+				<th class="url">Url</th>
 				<th class="name">Name</th>
 				<th class="description">Description</th>
 			</thead>
@@ -21,9 +22,10 @@
 				echo '<div class="sensor" title="Refresh sensor value" rel="'.$resource->id.'">'.$resource->currentValue." ".$resource->unit."</div>";
 				break;
 			}
-			echo '</td><td><div class="remove" rel="'.$resource->id.'">Remove</div>';
-			echo '<a class="fancybox" title="Sensed values" href="/resources/chart/'.$resource->id.'">'.$resource->name."</a></td>";
-			echo "<td>".$resource->description."</td>";
+			echo '</td><td><div class="remove smallButton" rel="'.$resource->id.'">Remove</div>';
+			echo '<a class="chart" title="Sensed values" href="/resources/chart/'.$resource->id.'">'.$resource->url."</a></td>";
+			echo '<td><div class="editable" rel="'.$resource->id.'" data="name">'.$resource->name."</div></td>";
+			echo '<td><div class="editable" rel="'.$resource->id.'" data="description">'.$resource->description."</div></td>";
 			echo "</tr>";
 			$i++;
 		}
@@ -35,13 +37,14 @@
 <script>
 
 $(document).ready(function() {
-	$(".switch").css("cursor", "pointer").click(ajaxSwitchToggle);
+	$(".switch").click(ajaxSwitchToggle);
 	$(".dimmer").slider({min: 0, max: 1, step:0.05, change: ajaxDimmerChange}).each(function() {
 		$(this).slider("value", $(this).attr("data"));
 	});
-	$(".sensor").css("cursor", "pointer").click(ajaxSensorRefresh);
-	$(".remove").css("cursor", "pointer").click(ajaxResourceRemove);
-	$(".fancybox").fancybox({
+	$(".sensor").click(ajaxSensorRefresh);
+	$(".remove").click(ajaxResourceRemove);
+	$(".editable").editable(ajaxSet);
+	$(".chart").fancybox({
 		type : 'iframe',
     	openEffect	: 'elastic',
     	closeEffect	: 'elastic',

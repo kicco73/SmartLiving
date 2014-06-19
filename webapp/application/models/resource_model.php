@@ -2,7 +2,7 @@
 class Resource_model extends CI_Model {
 	var $fields = array(
 			//'id',
-			'name', 'description', 'resType', 'unit', 'currentValue', 'timestamp'
+			'url', 'name', 'description', 'resType', 'unit', 'currentValue', 'timestamp'
 	);
 
 	function get($id) {
@@ -23,8 +23,8 @@ class Resource_model extends CI_Model {
 		return $this->db->where("resourceId", $id)->get("Sample")->result();
 	}
 	
-	function add_sample($name, $value) {
-		$result = $this->db->where('name', $name)->get('Resource')->result();
+	function add_sample($url, $value) {
+		$result = $this->db->where('url', $url)->get('Resource')->result();
 		if(count($result) > 0) {
 			$resource = $result[0];
 			$resource->currentValue = $value;
@@ -33,8 +33,8 @@ class Resource_model extends CI_Model {
 		}
 	}
 
-	function insert_or_update_by_name($name, $value, $unit, $type) {
-		$result = $this->db->where('name', $name)->get('Resource')->result();
+	function insert_or_update_by_url($url, $value, $unit, $type) {
+		$result = $this->db->where('url', $url)->get('Resource')->result();
 		if(count($result) > 0) {
 			$resource = $result[0];
 			$resource->currentValue = $value;
@@ -43,7 +43,7 @@ class Resource_model extends CI_Model {
 			$this->update($resource);
 		} else
 			$this->db->insert('Resource', 
-				array('name' => $name, 'currentValue' => $value, 
+				array('url' => $url, 'currentValue' => $value, 
 					  'unit' => $unit, 'resType' => $type));
 	}
 	

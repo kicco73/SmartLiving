@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.5.33)
 # Database: groupA
-# Generation Time: 2014-06-17 10:08:28 +0000
+# Generation Time: 2014-06-19 07:47:04 +0000
 # ************************************************************
 
 
@@ -35,7 +35,8 @@ CREATE TABLE `Resource` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `url` varchar(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
+  UNIQUE KEY `name` (`name`),
+  UNIQUE KEY `url` (`url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 LOCK TABLES `Resource` WRITE;
@@ -43,9 +44,9 @@ LOCK TABLES `Resource` WRITE;
 
 INSERT INTO `Resource` (`id`, `name`, `description`, `currentValue`, `resType`, `unit`, `timestamp`, `url`)
 VALUES
-	(7,'http://localhost:8888/resources/fake_rd/fan','',0.000,'switch','','2014-06-17 11:45:15',''),
-	(8,'http://localhost:8888/resources/fake_rd/light','',0.300,'dimmer','lux','2014-06-17 11:45:15',''),
-	(9,'http://localhost:8888/resources/fake_rd/accelerometer','',0.000,'sensor','m/s^2','2014-06-17 11:45:15','');
+	(41,'Dimmer','Descrizione del dimmer',0.000,'dimmer','lux','2014-06-19 09:32:24','http://localhost:8888/resources/fake_rd/light'),
+	(43,'Accelerometer','Descrizione dell\'accelerometro',0.500,'sensor','m/s^2','2014-06-19 09:32:24','http://localhost:8888/resources/fake_rd/accelerometer'),
+	(47,'Fan','Questo è un ventilatore',0.000,'switch','','2014-06-19 09:41:53','http://localhost:8888/resources/fake_rd/fan');
 
 /*!40000 ALTER TABLE `Resource` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -66,6 +67,17 @@ CREATE TABLE `Sample` (
   CONSTRAINT `sample_ibfk_1` FOREIGN KEY (`resourceId`) REFERENCES `Resource` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+LOCK TABLES `Sample` WRITE;
+/*!40000 ALTER TABLE `Sample` DISABLE KEYS */;
+
+INSERT INTO `Sample` (`id`, `resourceId`, `value`, `timeStamp`)
+VALUES
+	(1,41,0.100,'2014-06-17 15:39:23'),
+	(2,41,0.000,'2014-06-17 15:39:38'),
+	(3,41,0.200,'2014-06-19 09:30:56');
+
+/*!40000 ALTER TABLE `Sample` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 
