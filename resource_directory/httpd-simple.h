@@ -53,10 +53,17 @@
 #define GET 0
 #define POST 1
 
+#define HTTP_HEADER_200 "HTTP/1.0 200\nConnection:close\n"
+#define HTTP_HEADER_400 "HTTP/1.0 400\nConnection:close\n"
+#define HTTP_HEADER_404 "HTTP/1.0 404\nConnection:close\n"
+#define HTTP_HEADER_502 "HTTP/1.0 502\nConnection:close\n"
+
 struct httpd_state;
 typedef char (* httpd_simple_script_t)(struct httpd_state *s);
 
 struct httpd_state {
+  char *http_header;
+  char http_output_payload[512];
   int method;
   struct timer timer;
   struct psock sin, sout;

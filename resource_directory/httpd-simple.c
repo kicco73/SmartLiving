@@ -75,35 +75,25 @@ const char http_content_type_json[] = "Content-type:application/json\n\n";
 static
 PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
 {
-  /* char *ptr; */
-
   PSOCK_BEGIN(&s->sout);
 
   SEND_STRING(&s->sout, statushdr);
 
-  /* ptr = strrchr(s->filename, ISO_period); */
-  /* if(ptr == NULL) { */
-  /*   s->ptr = http_content_type_plain; */
-  /* } else if(strcmp(http_html, ptr) == 0) { */
-  /*   s->ptr = http_content_type_html; */
-  /* } else if(strcmp(http_css, ptr) == 0) { */
-  /*   s->ptr = http_content_type_css; */
-  /* } else if(strcmp(http_png, ptr) == 0) { */
-  /*   s->ptr = http_content_type_png; */
-  /* } else if(strcmp(http_gif, ptr) == 0) { */
-  /*   s->ptr = http_content_type_gif; */
-  /* } else if(strcmp(http_jpg, ptr) == 0) { */
-  /*   s->ptr = http_content_type_jpg; */
-  /* } else { */
-  /*   s->ptr = http_content_type_binary; */
-  /* } */
-  /* SEND_STRING(&s->sout, s->ptr); */
   SEND_STRING(&s->sout, http_content_type_json);
+
   PSOCK_END(&s->sout);
 }
 /*---------------------------------------------------------------------------*/
-const char http_header_200[] = "HTTP/1.0 200\nConnection:close\n";
-const char http_header_404[] = "HTTP/1.0 404\nConnection:close\n";
+static
+PT_THREAD(send_payload(struct httpd_state *s))
+{
+  PSOCK_BEGIN(&s->sout);
+
+  SEND_STRING(&s->sout, s->http_output_payload);
+
+  PSOCK_END(&s->sout);
+}
+/*---------------------------------------------------------------------------*/
 static
 PT_THREAD(handle_output(struct httpd_state *s))
 {
@@ -111,9 +101,12 @@ PT_THREAD(handle_output(struct httpd_state *s))
 
   s->script = NULL;
   s->script = httpd_simple_get_script(&s->filename[1]);
-
-  PT_WAIT_THREAD(&s->outputpt, send_headers(s, http_header_200));
   PT_WAIT_THREAD(&s->outputpt, s->script(s));
+
+  PT_WAIT_THREAD(&s->outputpt, send_headers(s, s->http_header ? s->http_header : HTTP_HEADER_200));
+  s->http_header = NULL;
+  PT_WAIT_THREAD(&s->outputpt, send_payload(s));
+  s->http_output_payload[0] = 0;
 
   s->script = NULL;
   PSOCK_CLOSE(&s->sout);
@@ -195,16 +188,16 @@ httpd_appcall(void *state)
       //webserver_log_file(&uip_conn->ripaddr, "reset (no memory block)");
       return;
     }
-     serving = 1;
-     tcp_markconn(uip_conn, s);
-   	 PSOCK_INIT(&s->sin, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
-     PSOCK_INIT(&s->sout, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
-     PT_INIT(&s->outputpt);
-     s->script = NULL;
-     s->state = STATE_WAITING;
-     timer_set(&s->timer, CLOCK_SECOND * 10);
-     handle_connection(s);
-     //serving = 0;
+    serving = 1;
+    tcp_markconn(uip_conn, s);
+    PSOCK_INIT(&s->sin, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
+    PSOCK_INIT(&s->sout, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
+    PT_INIT(&s->outputpt);
+    s->script = NULL;
+    s->state = STATE_WAITING;
+    timer_set(&s->timer, CLOCK_SECOND * 10);
+    handle_connection(s);
+    serving = 0;
   } else if(s) {
     if(uip_poll()) {
       if(timer_expired(&s->timer)) {

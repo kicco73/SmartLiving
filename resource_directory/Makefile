@@ -4,14 +4,12 @@ all: chmod resource_directory
 chmod:
 	sudo chmod 777 /dev/ttyUSB*
 
-CONTIKI=/home/user/contiki-2.6
+CONTIKI=/home/user/contiki-2.7
 
 WITH_UIP6=1
 UIP_CONF_IPV6=1
 CFLAGS+= -DUIP_CONF_IPV6_RPL -DRPL_CONF_STATS=1
 CFLAGS+= -DUIP_CONF_IPV6=1 -DWITH_UIP6=1
-
-CFLAGS += -Os
 
 CFLAGS += -DWITH_COAP=13
 CFLAGS += -DREST=coap_rest_implementation
