@@ -64,7 +64,7 @@
 #define STATE_WAITING 0
 #define STATE_OUTPUT  1
 
-MEMB(conns, struct httpd_state, CONNS);
+MEMB(conns, struct httpd_state, 1);
 
 #define ISO_nl      0x0a
 #define ISO_space   0x20
@@ -173,7 +173,6 @@ handle_connection(struct httpd_state *s)
 void
 httpd_appcall(void *state)
 {
-	static char serving;
   struct httpd_state *s = (struct httpd_state *)state;
 
   if(uip_closed() || uip_aborted() || uip_timedout()) {
@@ -183,12 +182,12 @@ httpd_appcall(void *state)
     }
   } else if(uip_connected()) {
     s = (struct httpd_state *)memb_alloc(&conns);
-    if(!s || serving) {
+    if(!s) {
+      puts("Aborting connection - no memory");
       uip_abort();
-      //webserver_log_file(&uip_conn->ripaddr, "reset (no memory block)");
       return;
+      //webserver_log_file(&uip_conn->ripaddr, "reset (no memory block)");
     }
-    serving = 1;
     tcp_markconn(uip_conn, s);
     PSOCK_INIT(&s->sin, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
     PSOCK_INIT(&s->sout, (uint8_t *)s->inputbuf, sizeof(s->inputbuf) - 1);
@@ -197,13 +196,13 @@ httpd_appcall(void *state)
     s->state = STATE_WAITING;
     timer_set(&s->timer, CLOCK_SECOND * 10);
     handle_connection(s);
-    serving = 0;
   } else if(s) {
     if(uip_poll()) {
       if(timer_expired(&s->timer)) {
         uip_abort();
         s->script = NULL;
         memb_free(&conns, s);
+	return;
         //webserver_log_file(&uip_conn->ripaddr, "reset (timeout)");
       }
     } else {

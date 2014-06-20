@@ -83,7 +83,7 @@ struct resource {
 };
  
 static struct resource rd[]={
-	{.address=0, .n="/accelerometer", .v="0", .u="m/s^2", .rt="sensor"},
+	{.address=0, .n="/sound", .v="0", .u="db", .rt="sensor"},
 	{.address=0, .n="/light", .v="0", .u="lux", .rt="dimmer"},
 	{.address=0, .n="/fan", .v="0", .u="", .rt="switch"}
 }; 
@@ -187,9 +187,9 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
 }
 
 // TODO: to remove
-//PROCESS(button_on_update_process, "Send HTTP request with button process");
+PROCESS(button_on_update_process, "Send HTTP request with button process");
 
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process/*,&button_on_update_process*/);
+AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process,&button_on_update_process);
 
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
@@ -233,26 +233,26 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 						put_value = pch;
 						coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
   					coap_set_header_uri_path(request, put_resource+1);
-						sprintf(buf, "v=%s", put_value);
+						snprintf(buf, sizeof(buf)-1, "v=%s", put_value);
   					coap_set_header_uri_query(request, buf);
 						//COAP_BLOCKING_REQUEST(&(rd[i].address), PUT_SENSOR_PORT, request, client_put_handler);
 						s->http_header = coap_success ? HTTP_HEADER_200 : HTTP_HEADER_502;
-						sprintf(s->http_output_payload, "{}");
+						snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
 					}	else {
 						s->http_header = HTTP_HEADER_400;
-						sprintf(s->http_output_payload, "{}");
+						snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
 					}
 				} else {
 					s->http_header = HTTP_HEADER_400;
-					sprintf(s->http_output_payload, "{}");
+					snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
 				}
 			} else {
 				s->http_header = HTTP_HEADER_400;
-				sprintf(s->http_output_payload, "{}");
+				snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
 			}
 		} else {
 			s->http_header = HTTP_HEADER_404;
-			sprintf(s->http_output_payload, "{}");
+			snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
 		}
 	}
 }
@@ -353,23 +353,24 @@ PROCESS_THREAD(border_router_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-/*static int
-handle_request(struct psock *ps)
-{
-  PSOCK_BEGIN(ps);
+static void handle_request(struct psock *ps) {
+	static char buf[256];
+		char buf2[] = "[{\"n\":\"/light\",\"v\":0.75}]\n";
+		PSOCK_BEGIN(ps);
 
-  PSOCK_SEND_STR(ps, "POST /resources/onUpdate HTTP/1.0\n");
-  PSOCK_SEND_STR(ps, "Content-type: application/json\n");
-  PSOCK_SEND_STR(ps, "\n");
-	PSOCK_SEND_STR(ps, "[{\"n\":\"/light\",\"v\":0.35}]\n");
-  
-  PSOCK_END(ps);
+		snprintf(buf, sizeof(buf)-1, "POST /resources/onUpdate HTTP/1.0\nContent-Length: %d\nContent-type: application/json\n\n%s", strlen(buf2), buf2);
+		SEND_STRING(ps, buf);
+		puts("SONO QUI");
+	//		opened = 0;
+//  		PSOCK_CLOSE(&ps);
+		PSOCK_END(ps);
 }
 
 PROCESS_THREAD(button_on_update_process, ev, data)
 {
 	PROCESS_BEGIN();
 
+  static char opened = 0;
 	static struct psock ps;
 	static char buffer[128];
 	static uip_ip6addr_t webapp;
@@ -381,23 +382,24 @@ PROCESS_THREAD(button_on_update_process, ev, data)
 		
 		tcp_connect(&webapp, UIP_HTONS(80), NULL);
 		printf("Connecting...\n");
-		PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
-		if(uip_aborted() || uip_timedout() || uip_closed()) {
-			printf("Could not establish connection\n");
-		} else if(uip_connected()) {
-			printf("Connected.\n");
+		while(1) {
+			puts("Waiting...");
+			PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
+			if(uip_aborted() || uip_timedout() || uip_closed()) {
+				printf("Could not establish connection\n");
+        break;
+			} else if(uip_connected()) {
 
-			PSOCK_INIT(&ps, buffer, sizeof(buffer));
-
-			do {
-				handle_request(&ps);
-				PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
-			} while(!(uip_closed() || uip_aborted() || uip_timedout()));
-
-			PSOCK_CLOSE(&ps);
-
-			printf("Connection close.\n");
+				printf("Connected.\n");
+			  PSOCK_INIT(&ps, buffer, sizeof(buffer));
+        opened = 1;
+      } 
+			if(!uip_newdata() || !uip_acked()) handle_request(&ps);
 		}
+    if(opened)
+  		PSOCK_CLOSE(&ps);
+		opened = 0;
+		printf("Connection close.\n");
   }
   PROCESS_END();
-}*/
+}
