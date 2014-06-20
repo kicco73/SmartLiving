@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.5.33)
 # Database: groupA
-# Generation Time: 2014-06-19 09:15:12 +0000
+# Generation Time: 2014-06-20 09:36:49 +0000
 # ************************************************************
 
 
@@ -39,8 +39,7 @@ LOCK TABLES `Directory` WRITE;
 
 INSERT INTO `Directory` (`id`, `url`, `description`, `name`)
 VALUES
-	(1,'http://localhost/resources/fake_rd','',''),
-	(2,'http://localhost/resources/fake_rd_1','','');
+	(12,'http://localhost:8888/directories/fake_rd','','');
 
 /*!40000 ALTER TABLE `Directory` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -60,18 +59,21 @@ CREATE TABLE `Resource` (
   `unit` varchar(32) NOT NULL DEFAULT '',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `url` varchar(255) NOT NULL DEFAULT '',
+  `directoryId` int(11) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `url` (`url`)
+  UNIQUE KEY `url` (`url`),
+  KEY `directoryId` (`directoryId`),
+  CONSTRAINT `resource_ibfk_1` FOREIGN KEY (`directoryId`) REFERENCES `Directory` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 LOCK TABLES `Resource` WRITE;
 /*!40000 ALTER TABLE `Resource` DISABLE KEYS */;
 
-INSERT INTO `Resource` (`id`, `name`, `description`, `currentValue`, `resType`, `unit`, `timestamp`, `url`)
+INSERT INTO `Resource` (`id`, `name`, `description`, `currentValue`, `resType`, `unit`, `timestamp`, `url`, `directoryId`)
 VALUES
-	(41,'Dimmer','Descrizione del dimmer',0.450,'dimmer','lux','2014-06-19 09:32:24','http://localhost/resources/fake_rd/light'),
-	(43,'dAccelerometer','Descrizione dell\'accelerometro',0.500,'sensor','m/s^2','2014-06-19 09:32:24','http://localhost/resources/fake_rd/accelerometer'),
-	(47,'Fan...','Questo è un ventilatore',0.000,'switch','','2014-06-19 09:41:53','http://localhost/resources/fake_rd/fan');
+	(23,'','',0.000,'switch','','2014-06-19 21:43:25','/fan',12),
+	(25,'','',0.000,'sensor','m/s^2','2014-06-19 21:43:25','/accelerometer',12),
+	(26,'','',0.000,'dimmer','lux','2014-06-19 21:55:10','/light',12);
 
 /*!40000 ALTER TABLE `Resource` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -97,9 +99,11 @@ LOCK TABLES `Sample` WRITE;
 
 INSERT INTO `Sample` (`id`, `resourceId`, `value`, `timeStamp`)
 VALUES
-	(1,41,0.100,'2014-06-17 15:39:23'),
-	(2,41,0.000,'2014-06-17 15:39:38'),
-	(3,41,0.200,'2014-06-19 09:30:56');
+	(1,25,0.100,'2014-06-19 21:48:45'),
+	(2,25,0.100,'2014-06-19 21:48:47'),
+	(3,25,0.100,'2014-06-19 21:48:48'),
+	(4,25,0.100,'2014-06-19 21:48:48'),
+	(5,25,0.120,'2014-06-19 21:48:54');
 
 /*!40000 ALTER TABLE `Sample` ENABLE KEYS */;
 UNLOCK TABLES;
