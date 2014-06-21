@@ -42,7 +42,7 @@ class Directories extends CI_Controller {
 		$this->load->view('list_directories', array("directories" => $directories));
 	}
 	
-	public function ajaxRefresh($id) {
+	public function ajaxRebuild($id) {
 		$directory = $this->Directory_model->get($id);
 		$b = $directory->url;
 		$rv = $this->_restGet($b."/");
@@ -55,6 +55,11 @@ class Directories extends CI_Controller {
 			log_message('error', 'resource directory unreachable');
 			$this->output->set_status_header('500', 'resource directory unreachable');
 		}
+	}
+	
+	public function ajaxRefresh($id) {
+		$resources = $this->Resource_model->list_by_directory($id);
+		$this->load->view('ajax_list_resources', array("resources" => $resources));
 	}
 	
 	public function ajaxRemove($id) {

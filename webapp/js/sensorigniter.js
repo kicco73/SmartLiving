@@ -119,15 +119,15 @@ var resource = {
 };
 
 var directory = {
-  ajaxRefresh: function() {
+  ajaxRebuild: function() {
 	var div = $(this);
 	var rel = div.attr("rel");
 	observe.pause();
-	$.ajax("/directories/ajaxRefresh/"+rel)
+	$.ajax("/directories/ajaxRebuild/"+rel)
 		.done(function(data) {
 			div.closest(".directory").find(".resources").replaceWith(data);
 		}).fail(function(x) {
-			alert("Cannot refresh resource directory");
+			alert("Cannot rebuild resource directory");
 		}).always(function() {
 			observe.run();
 		});
