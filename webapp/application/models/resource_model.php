@@ -21,8 +21,8 @@ class Resource_model extends CI_Model {
 		return $this->db->get(Resource_model::TABLENAME)->result();
 	}
 		
-	function list_by_directory($directory_id) {
-		return $this->db->get(Resource_model::TABLENAME)->result();
+	function list_by_directory($directoryId) {
+		return $this->db->where("directoryId", $directoryId)->get(Resource_model::TABLENAME)->result();
 	}
 		
 	function list_all_samples($id) {
