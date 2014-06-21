@@ -25,8 +25,13 @@
 			echo '</td>';
 			echo '<td><div class="editable" rel="'.$resource->id.'" data="name">'.$resource->name."</div></td>";
 			echo '<td><div class="editable" rel="'.$resource->id.'" data="description">'.$resource->description."</div></td>";
-			echo '<td><div class="remove smallButton" rel="'.$resource->id.'">Remove</div>';
-			echo '<a class="chart" title="Sensed values" href="/resources/chart/'.$resource->id.'">'.$resource->url."</a></td>";
+			echo '<td><a class="remove smallButton" rel="'.$resource->id.'">Remove</a>';
+			if($this->Resource_model->count_samples($resource->id)) {
+				echo '<a class="chart smallButton" title="Sensed values" href="/resources/chart/'.$resource->id.'">Chart</a>';
+				echo '<span class="chart">'.$resource->url."</span>";
+			} else 
+				echo '<span class="noChart" title="No data logged">'.$resource->url."</span>";
+			echo "</td>";
 			echo "</tr>";
 			$i++;
 		}
@@ -39,13 +44,17 @@
 
 $(document).ready(function() {
 	$(".new .switch").click(resource.ajaxSwitchToggle);
-	$(".new .dimmer").slider({min: 0, max: 1, step:0.05, change: resource.ajaxDimmerChange}).each(function() {
+	$(".new .dimmer").slider({min: 0, max: 1, step:0.05,  change: resource.ajaxDimmerChange}).each(function() {
 		$(this).slider("value", $(this).attr("data"));
 	});
+	$(".new .dimmer a").focus(observe.pause).blur(observe.run);
 	$(".new .sensor").click(resource.ajaxSensorRefresh);
 	$(".new .remove").click(resource.ajaxRemove);
-	$(".new .editable").editable(resource.ajaxSet);
-	$(".chart").fancybox({
+	$(".new .editable")
+		.editable(resource.ajaxSet)
+		.click(observe.pause)
+		.blur(observe.run);
+	$("a.chart").fancybox({
 		type : 'iframe',
     	openEffect	: 'elastic',
     	closeEffect	: 'elastic',

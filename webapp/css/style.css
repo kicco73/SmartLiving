@@ -2,6 +2,15 @@ html {
 	background-color: #eee;
 }
 
+span.chart {
+  font-style: bold;
+}
+
+span.noChart {
+  font-style: bold;
+  color: gray;
+}
+
 input.addDirectory {
   float: right;
   font-size: 9.5px;
@@ -18,8 +27,9 @@ input.addDirectory {
   font-size:smaller;
   border-radius: 5px;
   float: right;
-  margin-right: 10px;
+  margin-right: 5px;
   cursor: pointer;
+  text-decoration:none;
 }
 
 .smallButton:hover {
@@ -36,8 +46,8 @@ input.addDirectory {
 .toolbar {
   float: right;
   position: relative;
-  right: 33px;
-  top: -48px;
+  right: 32px;
+  top: -32px;
 }
 
 table {
@@ -112,11 +122,10 @@ div.switch.on {
 	h1 {
 		color: #444;
 		background-color: transparent;
-		border-bottom: 1px solid #D0D0D0;
 		font-size: 19px;
 		font-weight: normal;
 		margin: 0 0 14px 0;
-		padding: 14px 15px 10px 15px;
+		padding: 14px 15px 0 15px;
 	}
 	
 	.body{

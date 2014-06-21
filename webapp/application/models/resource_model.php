@@ -40,6 +40,10 @@ class Resource_model extends CI_Model {
 		return count($result) > 0;
 	}
 
+	function count_samples($id) {
+		return $this->db->where('resourceId', $id)->count_all_results("Sample");
+	}
+
 	function insert_or_update_by_url($directoryId, $url, $value, $unit, $type) {
 		$result = $this->db->where('url', $url)->get(Resource_model::TABLENAME)->result();
 		if(count($result) > 0) {
