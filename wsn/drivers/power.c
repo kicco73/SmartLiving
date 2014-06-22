@@ -67,7 +67,7 @@ void power_resource_periodic_handler(resource_t *r) {
 SENSORS_SENSOR(power_sensor, "power", sensor_value, sensor_configure, sensor_status);
 PERIODIC_RESOURCE(power_resource, METHOD_GET, "power W", "title=\"power sensor resource\";rt=\"Text\";obs", 5*CLOCK_SECOND);
 
-const struct Driver POWER_DRIVER = struct driver {
+const struct Driver POWER_DRIVER = {
 	.init = init, 
 	.notify = notify,
 	.sensor = &power_sensor
