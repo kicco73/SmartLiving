@@ -18,5 +18,5 @@ core-labels.S
 *core
 core
 *.srec
-
+*.o
 
