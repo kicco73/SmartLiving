@@ -354,15 +354,17 @@ PROCESS_THREAD(border_router_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 static void handle_request(struct psock *ps) {
-	static char buf[256];
-		char buf2[] = "[{\"n\":\"/light\",\"v\":0.75}]\n";
 		PSOCK_BEGIN(ps);
+
+		static char buf[256];
+		char buf2[] = "[{\"n\":\"/light\",\"v\":0.75}]\n";
 
 		snprintf(buf, sizeof(buf)-1, "POST /resources/onUpdate HTTP/1.0\nContent-Length: %d\nContent-type: application/json\n\n%s", strlen(buf2), buf2);
 		SEND_STRING(ps, buf);
-		puts("SONO QUI");
-	//		opened = 0;
-//  		PSOCK_CLOSE(&ps);
+
+		PSOCK_CLOSE(&ps);
+		printf("Connection closed.\n");
+
 		PSOCK_END(ps);
 }
 
@@ -370,7 +372,6 @@ PROCESS_THREAD(button_on_update_process, ev, data)
 {
 	PROCESS_BEGIN();
 
-  static char opened = 0;
 	static struct psock ps;
 	static char buffer[128];
 	static uip_ip6addr_t webapp;
@@ -382,24 +383,16 @@ PROCESS_THREAD(button_on_update_process, ev, data)
 		
 		tcp_connect(&webapp, UIP_HTONS(80), NULL);
 		printf("Connecting...\n");
-		while(1) {
-			puts("Waiting...");
-			PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
-			if(uip_aborted() || uip_timedout() || uip_closed()) {
-				printf("Could not establish connection\n");
-        break;
-			} else if(uip_connected()) {
-
-				printf("Connected.\n");
-			  PSOCK_INIT(&ps, buffer, sizeof(buffer));
-        opened = 1;
-      } 
-			if(!uip_newdata() || !uip_acked()) handle_request(&ps);
-		}
-    if(opened)
-  		PSOCK_CLOSE(&ps);
-		opened = 0;
-		printf("Connection close.\n");
+		
+		PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
+		if(uip_connected()) {
+			printf("Connected.\n");
+		  PSOCK_INIT(&ps, buffer, sizeof(buffer));
+			while(!(uip_aborted() || uip_closed() || uip_timedout())) {
+				PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
+				handle_request(&ps);
+			}
+    } 
   }
   PROCESS_END();
 }
