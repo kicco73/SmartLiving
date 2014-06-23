@@ -1,0 +1,221 @@
+using saved target 'z1'
+  CC        drivers/motion.c
+drivers/motion.c: In function ‘motion_resource_handler’:
+drivers/motion.c:52:3: warning: pointer targets in passing argument 1 of ‘sprintf’ differ in signedness [-Wpointer-sign]
+In file included from /home/user/contiki-2.7/apps/erbium/erbium.h:43:0,
+                 from drivers/motion.c:3:
+/usr/local/msp430/bin/../lib/gcc/msp430/4.7.0/../../../../msp430/include/stdio.h:51:44: note: expected ‘char *’ but argument is of type ‘uint8_t *’
+drivers/motion.c:53:3: warning: pointer targets in passing argument 1 of ‘strlen’ differ in signedness [-Wpointer-sign]
+In file included from drivers/motion.c:1:0:
+/usr/local/msp430/bin/../lib/gcc/msp430/4.7.0/../../../../msp430/include/string.h:50:15: note: expected ‘const char *’ but argument is of type ‘uint8_t *’
+make SENSORS=" -DWITH_MOTION_SENSOR -Wl,../drivers/motion.o" -C rd
+using saved target 'z1'
+make[1]: Entering directory `/home/user/SmartLiving/wsn/rd'
+mkdir obj_z1
+  CC        /home/user/contiki-2.7/core/net/rime/rimeaddr.c
+  CC        /home/user/contiki-2.7/core/net/rime/timesynch.c
+  CC        /home/user/contiki-2.7/core/net/rime/rimestats.c
+  CC        /home/user/contiki-2.7/core/net/mac/cxmac.c
+  CC        /home/user/contiki-2.7/core/net/mac/xmac.c
+/home/user/contiki-2.7/core/net/mac/xmac.c: In function ‘send_packet’:
+/home/user/contiki-2.7/core/net/mac/xmac.c:457:7: warning: variable ‘ret’ set but not used [-Wunused-but-set-variable]
+  CC        /home/user/contiki-2.7/core/net/mac/nullmac.c
+  CC        /home/user/contiki-2.7/core/net/mac/lpp.c
+/home/user/contiki-2.7/core/net/mac/lpp.c: In function ‘input_packet’:
+/home/user/contiki-2.7/core/net/mac/lpp.c:783:7: warning: variable ‘ret’ set but not used [-Wunused-but-set-variable]
+  CC        /home/user/contiki-2.7/core/net/mac/frame802154.c
+  CC        /home/user/contiki-2.7/core/net/mac/sicslowmac.c
+  CC        /home/user/contiki-2.7/core/net/mac/nullrdc.c
+/home/user/contiki-2.7/core/net/mac/nullrdc.c: In function ‘packet_input’:
+/home/user/contiki-2.7/core/net/mac/nullrdc.c:288:12: warning: variable ‘original_dataptr’ set but not used [-Wunused-but-set-variable]
+/home/user/contiki-2.7/core/net/mac/nullrdc.c:287:7: warning: variable ‘original_datalen’ set but not used [-Wunused-but-set-variable]
+  CC        /home/user/contiki-2.7/core/net/mac/nullrdc-noframer.c
+  CC        /home/user/contiki-2.7/core/net/mac/mac.c
+  CC        /home/user/contiki-2.7/core/net/mac/framer-nullmac.c
+  CC        /home/user/contiki-2.7/core/net/mac/framer-802154.c
+  CC        /home/user/contiki-2.7/core/net/mac/csma.c
+  CC        /home/user/contiki-2.7/core/net/mac/contikimac.c
+/home/user/contiki-2.7/core/net/mac/contikimac.c: In function ‘powercycle’:
+/home/user/contiki-2.7/core/net/mac/contikimac.c:386:27: warning: variable ‘t0’ set but not used [-Wunused-but-set-variable]
+/home/user/contiki-2.7/core/net/mac/contikimac.c: In function ‘send_packet’:
+/home/user/contiki-2.7/core/net/mac/contikimac.c:766:11: warning: variable ‘ret’ set but not used [-Wunused-but-set-variable]
+/home/user/contiki-2.7/core/net/mac/contikimac.c:544:11: warning: variable ‘is_reliable’ set but not used [-Wunused-but-set-variable]
+  CC        /home/user/contiki-2.7/core/net/mac/phase.c
+  CC        /home/user/contiki-2.7/core/net/rpl/rpl.c
+  CC        /home/user/contiki-2.7/core/net/rpl/rpl-dag.c
+  CC        /home/user/contiki-2.7/core/net/rpl/rpl-icmp6.c
+  CC        /home/user/contiki-2.7/core/net/rpl/rpl-timers.c
+  CC        /home/user/contiki-2.7/core/net/rpl/rpl-mrhof.c
+  CC        /home/user/contiki-2.7/core/net/rpl/rpl-ext-header.c
+  CC        /home/user/contiki-2.7/core/sys/process.c
+  CC        /home/user/contiki-2.7/core/sys/procinit.c
+  CC        /home/user/contiki-2.7/core/sys/autostart.c
+  CC        /home/user/contiki-2.7/core/loader/elfloader.c
+  CC        /home/user/contiki-2.7/core/sys/profile.c
+  CC        /home/user/contiki-2.7/core/sys/timetable.c
+  CC        /home/user/contiki-2.7/core/sys/timetable-aggregate.c
+  CC        /home/user/contiki-2.7/core/sys/compower.c
+  CC        /home/user/contiki-2.7/core/dev/serial-line.c
+  CC        /home/user/contiki-2.7/core/lib/memb.c
+  CC        /home/user/contiki-2.7/core/lib/mmem.c
+  CC        /home/user/contiki-2.7/core/sys/timer.c
+  CC        /home/user/contiki-2.7/core/lib/list.c
+  CC        /home/user/contiki-2.7/core/sys/etimer.c
+  CC        /home/user/contiki-2.7/core/sys/ctimer.c
+  CC        /home/user/contiki-2.7/core/sys/energest.c
+  CC        /home/user/contiki-2.7/core/sys/rtimer.c
+  CC        /home/user/contiki-2.7/core/sys/stimer.c
+  CC        /home/user/contiki-2.7/core/lib/trickle-timer.c
+  CC        /home/user/contiki-2.7/core/lib/print-stats.c
+  CC        /home/user/contiki-2.7/core/lib/ifft.c
+  CC        /home/user/contiki-2.7/core/lib/crc16.c
+  CC        /home/user/contiki-2.7/core/lib/random.c
+  CC        /home/user/contiki-2.7/core/lib/checkpoint.c
+  CC        /home/user/contiki-2.7/core/lib/ringbuf.c
+  CC        /home/user/contiki-2.7/core/lib/settings.c
+  CC        /home/user/contiki-2.7/core/net/dhcpc.c
+  CC        /home/user/contiki-2.7/core/net/hc.c
+  CC        /home/user/contiki-2.7/core/net/nbr-table.c
+  CC        /home/user/contiki-2.7/core/net/netstack.c
+  CC        /home/user/contiki-2.7/core/net/packetbuf.c
+  CC        /home/user/contiki-2.7/core/net/packetqueue.c
+  CC        /home/user/contiki-2.7/core/net/psock.c
+  CC        /home/user/contiki-2.7/core/net/queuebuf.c
+  CC        /home/user/contiki-2.7/core/net/resolv.c
+/home/user/contiki-2.7/core/net/resolv.c: In function ‘mdns_write_announce_records’:
+/home/user/contiki-2.7/core/net/resolv.c:509:22: warning: variable ‘ans’ set but not used [-Wunused-but-set-variable]
+/home/user/contiki-2.7/core/net/resolv.c: In function ‘mdns_prep_host_announce_packet’:
+/home/user/contiki-2.7/core/net/resolv.c:606:22: warning: unused variable ‘ans’ [-Wunused-variable]
+  CC        /home/user/contiki-2.7/core/net/sicslowpan.c
+  CC        /home/user/contiki-2.7/core/net/simple-udp.c
+  CC        /home/user/contiki-2.7/core/net/tcpdump.c
+  CC        /home/user/contiki-2.7/core/net/tcpip.c
+  CC        /home/user/contiki-2.7/core/net/uaodv-rt.c
+/home/user/contiki-2.7/core/net/uaodv-rt.c: In function ‘uaodv_rt_lookup_any’:
+/home/user/contiki-2.7/core/net/uaodv-rt.c:98:5: warning: implicit declaration of function ‘memcmp’ [-Wimplicit-function-declaration]
+  CC        /home/user/contiki-2.7/core/net/uaodv.c
+/home/user/contiki-2.7/core/net/uaodv.c: In function ‘fwc_lookup’:
+/home/user/contiki-2.7/core/net/uaodv.c:91:3: warning: implicit declaration of function ‘memcmp’ [-Wimplicit-function-declaration]
+  CC        /home/user/contiki-2.7/core/net/uip-debug.c
+  CC        /home/user/contiki-2.7/core/net/uip-ds6-route.c
+  CC        /home/user/contiki-2.7/core/net/uip-ds6-nbr.c
+  CC        /home/user/contiki-2.7/core/net/uip-ds6.c
+  CC        /home/user/contiki-2.7/core/net/uip-fw-drv.c
+  CC        /home/user/contiki-2.7/core/net/uip-fw.c
+  CC        /home/user/contiki-2.7/core/net/uip-icmp6.c
+  CC        /home/user/contiki-2.7/core/net/uip-nd6.c
+  CC        /home/user/contiki-2.7/core/net/uip-neighbor.c
+  CC        /home/user/contiki-2.7/core/net/uip-over-mesh.c
+  CC        /home/user/contiki-2.7/core/net/uip-packetqueue.c
+  CC        /home/user/contiki-2.7/core/net/uip-split.c
+  CC        /home/user/contiki-2.7/core/net/uip-udp-packet.c
+  CC        /home/user/contiki-2.7/core/net/uip.c
+  CC        /home/user/contiki-2.7/core/net/uip6.c
+  CC        /home/user/contiki-2.7/core/net/uip_arp.c
+  CC        /home/user/contiki-2.7/core/net/uiplib.c
+  CC        /home/user/contiki-2.7/core/sys/mt.c
+  CC        /home/user/contiki-2.7/core/dev/nullradio.c
+  CC        /home/user/contiki-2.7/apps/er-coap-13/er-coap-13.c
+  CC        /home/user/contiki-2.7/apps/er-coap-13/er-coap-13-engine.c
+  CC        /home/user/contiki-2.7/apps/er-coap-13/er-coap-13-transactions.c
+  CC        /home/user/contiki-2.7/apps/er-coap-13/er-coap-13-observing.c
+  CC        /home/user/contiki-2.7/apps/er-coap-13/er-coap-13-separate.c
+  CC        /home/user/contiki-2.7/apps/erbium/erbium.c
+  CC        /home/user/contiki-2.7/platform/z1/./contiki-z1-platform.c
+  CC        /home/user/contiki-2.7/cpu/msp430/f2xxx/msp430.c
+  CC        /home/user/contiki-2.7/core/dev/leds.c
+  CC        /home/user/contiki-2.7/cpu/msp430/./watchdog.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/xmem.c
+  CC        /home/user/contiki-2.7/cpu/msp430/f2xxx/spi.c
+  CC        /home/user/contiki-2.7/core/dev/cc2420.c
+/home/user/contiki-2.7/core/dev/cc2420.c: In function ‘flushrx’:
+/home/user/contiki-2.7/core/dev/cc2420.c:179:11: warning: variable ‘dummy’ set but not used [-Wunused-but-set-variable]
+/home/user/contiki-2.7/core/dev/cc2420.c: In function ‘cc2420_transmit’:
+/home/user/contiki-2.7/core/dev/cc2420.c:346:11: warning: variable ‘total_len’ set but not used [-Wunused-but-set-variable]
+  CC        /home/user/contiki-2.7/core/dev/cc2420-aes.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/cc2420-arch.c
+  CC        /home/user/contiki-2.7/cpu/msp430/./cc2420-arch-sfd.c
+/home/user/contiki-2.7/cpu/msp430/./cc2420-arch-sfd.c: In function ‘cc2420_timerb1_interrupt’:
+/home/user/contiki-2.7/cpu/msp430/./cc2420-arch-sfd.c:44:7: warning: variable ‘tbiv’ set but not used [-Wunused-but-set-variable]
+  CC        /home/user/contiki-2.7/platform/z1/./node-id.c
+  CC        /home/user/contiki-2.7/core/lib/sensors.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/button-sensor.c
+  CC        /home/user/contiki-2.7/core/cfs/cfs-coffee.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/radio-sensor.c
+  CC        /home/user/contiki-2.7/cpu/msp430/f2xxx/uart0.c
+  CC        /home/user/contiki-2.7/cpu/msp430/dev/uart0-putchar.c
+  CC        /home/user/contiki-2.7/cpu/msp430/./uip-ipchksum.c
+  CC        /home/user/contiki-2.7/platform/z1/./checkpoint-arch.c
+  CC        /home/user/contiki-2.7/core/dev/slip.c
+  CC        /home/user/contiki-2.7/cpu/msp430/./slip_uart0.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/z1-phidgets.c
+  CC        /home/user/contiki-2.7/core/dev/sht11.c
+/home/user/contiki-2.7/core/dev/sht11.c: In function ‘sht11_init’:
+/home/user/contiki-2.7/core/dev/sht11.c:218:4: warning: #warning SHT11: DISABLING I2C BUS [-Wcpp]
+  CC        /home/user/contiki-2.7/core/dev/sht11-sensor.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/light-sensor.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/battery-sensor.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/sky-sensors.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/tmp102.c
+/home/user/contiki-2.7/platform/z1/dev/tmp102.c: In function ‘tmp102_read_temp_x100’:
+/home/user/contiki-2.7/platform/z1/dev/tmp102.c:167:10: warning: unused variable ‘rd’ [-Wunused-variable]
+  CC        /home/user/contiki-2.7/platform/z1/dev/temperature-sensor.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/light-ziglet.c
+/home/user/contiki-2.7/platform/z1/dev/light-ziglet.c: In function ‘tsl2563_read_reg’:
+/home/user/contiki-2.7/platform/z1/dev/light-ziglet.c:187:5: warning: ‘return’ with no value, in function returning non-void [-Wreturn-type]
+/home/user/contiki-2.7/platform/z1/dev/light-ziglet.c:189:5: warning: passing argument 1 of ‘calculateLux’ from incompatible pointer type [enabled by default]
+/home/user/contiki-2.7/platform/z1/dev/light-ziglet.c:65:1: note: expected ‘uint16_t *’ but argument is of type ‘uint16_t (*)[2]’
+/home/user/contiki-2.7/platform/z1/dev/light-ziglet.c: In function ‘light_ziglet_on’:
+/home/user/contiki-2.7/platform/z1/dev/light-ziglet.c:202:3: warning: passing argument 2 of ‘i2c_transmit_n’ from incompatible pointer type [enabled by default]
+In file included from /home/user/contiki-2.7/platform/z1/dev/light-ziglet.c:44:0:
+/home/user/contiki-2.7/platform/z1/dev/i2cmaster.h:53:6: note: expected ‘uint8_t *’ but argument is of type ‘uint8_t (*)[2]’
+  CC        /home/user/contiki-2.7/platform/z1/dev/relay-phidget.c
+/home/user/contiki-2.7/platform/z1/dev/relay-phidget.c: In function ‘relay_toggle’:
+/home/user/contiki-2.7/platform/z1/dev/relay-phidget.c:99:11: warning: unused variable ‘status’ [-Wunused-variable]
+/home/user/contiki-2.7/platform/z1/dev/relay-phidget.c:105:1: warning: control reaches end of non-void function [-Wreturn-type]
+  CC        /home/user/contiki-2.7/platform/z1/dev/tlc59116.c
+/home/user/contiki-2.7/platform/z1/dev/tlc59116.c: In function ‘tlc59116_led’:
+/home/user/contiki-2.7/platform/z1/dev/tlc59116.c:158:3: warning: suggest parentheses around comparison in operand of ‘|’ [-Wparentheses]
+/home/user/contiki-2.7/platform/z1/dev/tlc59116.c: In function ‘tlc59116_init’:
+/home/user/contiki-2.7/platform/z1/dev/tlc59116.c:184:3: warning: passing argument 2 of ‘tlc59116_write_stream’ from incompatible pointer type [enabled by default]
+/home/user/contiki-2.7/platform/z1/dev/tlc59116.c:79:1: note: expected ‘uint8_t *’ but argument is of type ‘uint8_t (*)[17]’
+  CC        /home/user/contiki-2.7/core/lib/me.c
+  CC        /home/user/contiki-2.7/core/lib/me_tabs.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/i2cmaster.c
+  CC        /home/user/contiki-2.7/platform/z1/dev/adxl345.c
+  CC        /home/user/contiki-2.7/cpu/msp430/./flash.c
+  CC        /home/user/contiki-2.7/cpu/msp430/f1xxx/clock.c
+  CC        /home/user/contiki-2.7/cpu/msp430/./leds-arch.c
+  CC        /home/user/contiki-2.7/cpu/msp430/./lpm.c
+  CC        /home/user/contiki-2.7/cpu/msp430/./mtarch.c
+  CC        /home/user/contiki-2.7/cpu/msp430/f1xxx/rtimer-arch.c
+  CC        /home/user/contiki-2.7/core/loader/elfloader-msp430.c
+  CC        /home/user/contiki-2.7/core/loader/symtab.c
+cp /home/user/contiki-2.7/tools/empty-symbols.c symbols.c
+cp /home/user/contiki-2.7/tools/empty-symbols.h symbols.h
+  CC        symbols.c
+  AR        contiki-z1.a
+  CC        resource_directory.c
+resource_directory.c:96:2: warning: missing braces around initializer [-Wmissing-braces]
+resource_directory.c:96:2: warning: (near initialization for ‘rd[0].address’) [-Wmissing-braces]
+resource_directory.c:158:2: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+resource_directory.c: In function ‘client_put_handler’:
+resource_directory.c:175:3: warning: implicit declaration of function ‘find_resource’ [-Wimplicit-function-declaration]
+resource_directory.c: In function ‘generate_routes’:
+resource_directory.c:300:1: warning: no return statement in function returning non-void [-Wreturn-type]
+resource_directory.c: In function ‘process_thread_border_router_process’:
+resource_directory.c:384:2: warning: implicit declaration of function ‘coap_receiver_init’ [-Wimplicit-function-declaration]
+resource_directory.c: In function ‘handle_request’:
+resource_directory.c:412:3: warning: ‘return’ with a value, in function returning void [enabled by default]
+resource_directory.c:417:3: warning: ‘return’ with a value, in function returning void [enabled by default]
+resource_directory.c: In function ‘process_thread_button_on_update_process’:
+resource_directory.c:439:5: warning: pointer targets in passing argument 2 of ‘psock_init’ differ in signedness [-Wpointer-sign]
+In file included from /home/user/contiki-2.7/core/./contiki-net.h:55:0,
+                 from resource_directory.c:40:
+/home/user/contiki-2.7/core/./net/psock.h:132:6: note: expected ‘uint8_t *’ but argument is of type ‘char *’
+  CC        slip-bridge.c
+  CC        httpd-simple.c
+  CC        /home/user/contiki-2.7/platform/z1/./contiki-z1-main.c
+  LD        resource_directory.z1
+rm obj_z1/httpd-simple.o obj_z1/slip-bridge.o obj_z1/contiki-z1-main.o resource_directory.co
+make[1]: Leaving directory `/home/user/SmartLiving/wsn/rd'

@@ -51,6 +51,16 @@
 #include "dev/button-sensor.h"
 #include "sys/etimer.h"
 
+#include "drivers/power.h"
+#include "drivers/light.h"
+#include "drivers/sound.h"
+#include "drivers/co.h"
+#include "drivers/co2.h"
+#include "drivers/fan.h"
+#include "drivers/dimmer.h"
+#include "drivers/temp.h"
+#include "drivers/motion.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -119,6 +129,38 @@ AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 #define BUF_USES_STACK 1
 #endif
 
+static driver_t driver[] = {
+#ifdef WITH_POWER_SENSOR
+	&POWER_DRIVER,
+#endif
+#ifdef WITH_LIGHT_SENSOR
+	&LIGHT_DRIVER,
+#endif
+#ifdef WITH_SOUND_SENSOR
+	&SOUND_DRIVER,
+#endif
+#ifdef WITH_CO_SENSOR
+	&CO_DRIVER,
+#endif
+#ifdef WITH_CO2_SENSOR
+	&CO2_DRIVER,
+#endif
+#ifdef WITH_FAN_SENSOR
+	&FAN_DRIVER,
+#endif
+#ifdef WITH_DIMMER_SENSOR
+	&DIMMER_DRIVER,
+#endif
+#ifdef WITH_TEMP_SENSOR
+	&TEMP_DRIVER,
+#endif
+#ifdef WITH_MOTION_SENSOR
+	&MOTION_DRIVER,
+#endif
+};
+
+
+
 static char *put_resource;
 static char *put_value;
 static char coap_success;
@@ -177,7 +219,7 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
   PROCESS_BEGIN();
 
   httpd_init();
-
+	
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
     httpd_appcall(data);
@@ -291,6 +333,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 {
   static struct etimer et, ledETimer;
   rpl_dag_t *dag;
+  int i;
 
   PROCESS_BEGIN();
 
@@ -337,12 +380,6 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   etimer_set(&ledETimer, CLOCK_SECOND >> 1);
 
-  while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ledETimer));
-    etimer_restart(&ledETimer);
-    leds_toggle(LEDS_GREEN);
-  }
-
 	// Initialize CoAP client
 	coap_receiver_init();
 
@@ -350,8 +387,20 @@ PROCESS_THREAD(border_router_process, ev, data)
 	rest_init_engine();
 	rest_activate_event_resource(&resource_register_sensor);
 
+  for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
+	PRINTF("%s: initializing driver\n", driver[i]->name);
+	driver[i]->init();
+  }
+
+  while(1) {
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ledETimer));
+    etimer_restart(&ledETimer);
+    leds_toggle(LEDS_GREEN);
+  }
+
   PROCESS_END();
 }
+
 /*---------------------------------------------------------------------------*/
 static void handle_request(struct psock *ps) {
 		PSOCK_BEGIN(ps);
@@ -396,3 +445,30 @@ PROCESS_THREAD(button_on_update_process, ev, data)
   }
   PROCESS_END();
 }
+
+
+/*---------------------------------------------------------------------------*/
+#if 0
+PROCESS_THREAD(button_on_update_process, ev, data) {
+	static int i;
+	static struct etimer timer;
+	PROCESS_BEGIN();
+	SENSORS_ACTIVATE(button_sensor);
+	PRINTF("Button process started\n");
+	while(1) {
+		PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
+		PRINTF("*** FORCING DELIVERY OF ALL RESOURCES\n");
+		leds_on(LEDS_RED);
+
+		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
+			PRINTF("%s: forcing notification\n", driver[i]->name);
+			driver[i]->notify();
+		}
+
+		etimer_set(&timer, CLOCK_SECOND >> 1);
+		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+		leds_off(LEDS_RED);
+	}
+	PROCESS_END();
+}
+#endif

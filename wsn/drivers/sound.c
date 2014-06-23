@@ -4,9 +4,9 @@
 #include "er-coap-13.h"
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
-#include "fan.h"
+#include "sound.h"
 
-const struct sensors_sensor fan_sensor;
+const struct sensors_sensor sound_sensor;
 
 /*---------------------------------------------------------------------------*/
 
@@ -45,7 +45,7 @@ static int sensor_configure(int type, int c) {
 
 /*---------------------------------------------------------------------------*/
 
-void fan_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+void sound_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
 	int8_t length;
 	uint8_t method = REST.get_method_type(request);
 	if(method & METHOD_GET) {
@@ -61,11 +61,11 @@ void fan_resource_handler(void* request, void* response, uint8_t *buffer, uint16
 
 /*---------------------------------------------------------------------------*/
 
-SENSORS_SENSOR(fan_sensor, "fan sensor", sensor_value, sensor_configure, sensor_status);
-PERIODIC_RESOURCE(fan_resource, METHOD_GET|METHOD_PUT, "on/off", "title=\"fan status;rt=\"Text\";obs", 5*CLOCK_SECOND);
+SENSORS_SENSOR(sound_sensor, "sound sensor", sensor_value, sensor_configure, sensor_status);
+PERIODIC_RESOURCE(sound_resource, METHOD_GET, "on/off", "title=\"sound sensor;rt=\"Text\";obs", 5*CLOCK_SECOND);
 
-const struct Driver FAN_DRIVER = {
-	.name = "fan sensor",
+const struct Driver SOUND_DRIVER = {
+	.name = "sound sensor",
 	.init = sensor_init, 
 	.notify = sensor_notify
 };

@@ -76,7 +76,7 @@ static void sensor_notify() {
 
 SENSORS_SENSOR(power_sensor, "power sensor", sensor_value, sensor_configure, sensor_status);
 
-struct Driver POWER_DRIVER = {
+const struct Driver POWER_DRIVER = {
 	.name = "power sensor",
 	.init = sensor_init, 
 	.notify = sensor_notify

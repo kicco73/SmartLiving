@@ -15,40 +15,43 @@
 #include "erbium.h"
 #include "er-coap-13.h"
 
-#include "drivers/driver.h"
 #include "drivers/power.h"
-//#include "drivers/light.h"
-//#include "drivers/sound.h"
-//#include "drivers/co.h"
-//#include "drivers/co2.h"
+#include "drivers/light.h"
+#include "drivers/sound.h"
+#include "drivers/co.h"
+#include "drivers/co2.h"
 #include "drivers/fan.h"
-//#include "drivers/dimmer.h"
-//#include "drivers/temperature.h"
+#include "drivers/dimmer.h"
+#include "drivers/temp.h"
+#include "drivers/motion.h"
 
 static driver_t driver[] = {
 #ifdef WITH_POWER_SENSOR
 	&POWER_DRIVER,
 #endif
 #ifdef WITH_LIGHT_SENSOR
-	LIGHT_DRIVER,
+	&LIGHT_DRIVER,
 #endif
 #ifdef WITH_SOUND_SENSOR
-	SOUND_DRIVER,
+	&SOUND_DRIVER,
 #endif
 #ifdef WITH_CO_SENSOR
-	CO_DRIVER,
+	&CO_DRIVER,
 #endif
 #ifdef WITH_CO2_SENSOR
-	CO2_DRIVER,
+	&CO2_DRIVER,
 #endif
 #ifdef WITH_FAN_SENSOR
-	FAN_DRIVER,
+	&FAN_DRIVER,
 #endif
 #ifdef WITH_DIMMER_SENSOR
-	DIMMER_DRIVER,
+	&DIMMER_DRIVER,
 #endif
-#ifdef WITH_TEMPERATURE_SENSOR
-	TEMPERATURE_DRIVER,
+#ifdef WITH_TEMP_SENSOR
+	&TEMP_DRIVER,
+#endif
+#ifdef WITH_MOTION_SENSOR
+	&MOTION_DRIVER,
 #endif
 };
 

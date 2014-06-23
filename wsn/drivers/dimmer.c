@@ -4,9 +4,9 @@
 #include "er-coap-13.h"
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
-#include "fan.h"
+#include "dimmer.h"
 
-const struct sensors_sensor fan_sensor;
+const struct sensors_sensor dimmer_sensor;
 
 /*---------------------------------------------------------------------------*/
 
@@ -45,7 +45,7 @@ static int sensor_configure(int type, int c) {
 
 /*---------------------------------------------------------------------------*/
 
-void fan_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+void dimmer_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
 	int8_t length;
 	uint8_t method = REST.get_method_type(request);
 	if(method & METHOD_GET) {
@@ -61,11 +61,23 @@ void fan_resource_handler(void* request, void* response, uint8_t *buffer, uint16
 
 /*---------------------------------------------------------------------------*/
 
-SENSORS_SENSOR(fan_sensor, "fan sensor", sensor_value, sensor_configure, sensor_status);
-PERIODIC_RESOURCE(fan_resource, METHOD_GET|METHOD_PUT, "on/off", "title=\"fan status;rt=\"Text\";obs", 5*CLOCK_SECOND);
+void dimmer_resource_periodic_handler(resource_t *r) {
+	static int event_counter;
+	char buffer[16];
+	sprintf(buffer, "%d", sensor_value(0));
+	coap_packet_t notification[1];
+	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
+	coap_set_payload(notification, buffer, strlen(buffer)+1);
+	REST.notify_subscribers(r, event_counter++, notification);
+}
 
-const struct Driver FAN_DRIVER = {
-	.name = "fan sensor",
+/*---------------------------------------------------------------------------*/
+
+SENSORS_SENSOR(dimmer_sensor, "dimmer sensor", sensor_value, sensor_configure, sensor_status);
+PERIODIC_RESOURCE(dimmer_resource, METHOD_GET|METHOD_PUT, "on/off", "title=\"dimmer status;rt=\"Text\";obs", 5*CLOCK_SECOND);
+
+struct Driver DIMMER_DRIVER = {
+	.name = "dimmer sensor",
 	.init = sensor_init, 
 	.notify = sensor_notify
 };
