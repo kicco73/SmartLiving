@@ -156,8 +156,6 @@ static driver_t driver[] = {
 #endif
 };
 
-
-
 static char *put_resource;
 static char *put_value;
 static char coap_success;
@@ -179,24 +177,29 @@ void client_put_handler(void *response) {
 	}
 }
 
-  //PRINTA("Reply: %d %.*s\n", status, len, (char*) chunk);
-
-// Handle CoAP GET response
-/*void client_get_handler(void *response) {
+void get_resources_handler(void *response) {
 	// TODO: add resource to local RD, and verify duplicates?
-	PRINTA("client_get_handler()");
-}*/
+	puts("get_resources_handler()");
+}
 
 RESOURCE(register_resource, METHOD_POST, "register", "title=\"Register resource\";rt=\"Text\"");
 
 void register_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-	// FIXME: Request resources' list to the new sensor
 	uint8_t length;
-	puts("register_resource_handler()");
-	REST.set_header_content_type(response, REST.type.APPLICATION_JSON); 
-	REST.set_header_etag(response, (uint8_t *) &length, 1);
-	REST.set_response_status(response, REST.status.OK);
-	leds_toggle(LEDS_BLUE);
+	uint8_t method = REST.get_method_type(request);
+	if(method & METHOD_POST) {
+		const char *tmpbuf;
+		//const uint8_t *chunk;
+		//int len;
+		REST.get_post_variable(request, "v", &tmpbuf);
+		// TODO
+		REST.set_header_content_type(response, REST.type.TEXT_PLAIN); 
+		REST.set_header_etag(response, (uint8_t *) &length, 1);
+		REST.set_response_status(response, REST.status.OK);
+		//len = coap_get_header_proxy_uri(request, &chunk);
+		//printf("proxy_uri: %.*s\n", len, (char*) chunk);
+	} else
+		REST.set_response_status(response, REST.status.BAD_REQUEST);
 }
 
 int find_resource(char *name) {
@@ -318,7 +321,6 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 
 void client_observing_handler(void *response) {
   const uint8_t *chunk;
-  puts("OSSERVATA");
   int len = coap_get_payload(response, &chunk);
   int status = ((coap_packet_t*)response)->code;
   printf("Reply: %d %.*s\n", status, len, (char*) chunk);
