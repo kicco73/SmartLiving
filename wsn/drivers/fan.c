@@ -5,22 +5,19 @@
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
 #include "fan.h"
+#include "dev/relay-phidget.h"
+#include "dev/i2cmaster.h"
+
+static int value;
 
 const struct sensors_sensor fan_sensor;
 
 /*---------------------------------------------------------------------------*/
+RESOURCE(fan_resource, METHOD_GET|METHOD_PUT, "fan", "title=\"fan status\";rt=\"Text\"");
 
 static void sensor_init() {
-	// TODO
-	//SENSORS_ACTIVATE(power_sensor);
-	//rest_activate_periodic_resource(&periodic_resource_fan_resource);
-}
-
-/*---------------------------------------------------------------------------*/
-
-static int sensor_value(int type) {
-	// TODO
-	return 0;
+	relay_enable(7);
+	rest_activate_resource(&resource_fan_resource);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -31,41 +28,31 @@ static void sensor_notify() {
 
 /*---------------------------------------------------------------------------*/
 
-static int sensor_status(int type) {
-	// TODO
-  	return 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
-static int sensor_configure(int type, int c) {
-	// TODO
-	return 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
 void fan_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
 	int8_t length;
 	uint8_t method = REST.get_method_type(request);
 	if(method & METHOD_GET) {
-		sprintf(buffer, "%d", sensor_value(0));
+		sprintf(buffer, "%d", value);
 		length = strlen(buffer)+1;
 		REST.set_header_content_type(response, REST.type.APPLICATION_JSON); 
 		REST.set_header_etag(response, (uint8_t *) &length, 1);
 		REST.set_response_status(response, REST.status.OK);
-		REST.set_response_payload(response, buffer, length);
+		REST.set_response_payload(response, buffer, length);}
+          else if(method & METHOD_PUT){
+		const char *tmpbuf;
+		REST.get_post_variable(request, "v", &tmpbuf);
+		value = atoi(tmpbuf);
+		if (value) relay_on();
+		else relay_off();
+		REST.set_response_status(response, REST.status.CHANGED);
 	} else
 		REST.set_response_status(response, REST.status.BAD_REQUEST);
 }
 
 /*---------------------------------------------------------------------------*/
 
-SENSORS_SENSOR(fan_sensor, "fan sensor", sensor_value, sensor_configure, sensor_status);
-PERIODIC_RESOURCE(fan_resource, METHOD_GET|METHOD_PUT, "on/off", "title=\"fan status;rt=\"Text\";obs", 5*CLOCK_SECOND);
-
 const struct Driver FAN_DRIVER = {
-	.name = "fan sensor",
+	.name = "fan relay",
 	.init = sensor_init, 
 	.notify = sensor_notify
 };

@@ -38,7 +38,7 @@
 #endif
 
 
-#define SENSOR_READ_INTERVAL (1*CLOCK_SECOND)
+#define SENSOR_READ_INTERVAL (3*CLOCK_SECOND)
   static uint16_t light;
 
 /*---------------------------------------------------------------------------*/
@@ -74,7 +74,7 @@ void resource1_periodic_handler(resource_t *r) {
 /******************************************************/
 
 
-PERIODIC_RESOURCE(resource1, METHOD_GET, "lux", "title=\"lux resorce\";rt=\"Text\";obs", 5*CLOCK_SECOND);
+PERIODIC_RESOURCE(resource1, METHOD_GET, "lux", "title=\"lux resorce\";rt=\"Text\";obs", 1*CLOCK_SECOND);
 /**************************/
 
 
@@ -92,13 +92,14 @@ PROCESS_THREAD(coap_server_process, ev, data)
   uint8_t state;
   static uint8_t status;
   static struct etimer timer;
+  static OFFSET = 112;
+  static SCALE_FACTOR=0.354;
 
   char minus;
 
  
 
   SENSORS_ACTIVATE(power_sensor);
-
   uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF); 
@@ -119,21 +120,33 @@ PROCESS_THREAD(coap_server_process, ev, data)
   }
 
   PRINTFDEBUG("CoAP event observable server started\n");
-  static int j=0;
+
+//misura della potenza
   static int val=0; 
-  while(j<20) {
- printf("Actual val : %d\n", j);
+  static int val_int, val_dec;
+ /* while(j<20) {
     etimer_set(&timer, SENSOR_READ_INTERVAL);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
-j++;
-//misura della potenza
- val += value(0);
- printf("Actual val : %d\n", val);
- printf("Actual val : %d\n", j);
+    j++;
+    val += power_sensor.value(0);
+    printf("Valori intermedi: %d\n", val); 
     leds_toggle(LEDS_GREEN);
   }
- printf("Actual val : %d\n", val/20);
-
+    printf("Actual val : %d\n", (int)(val/20));
+*/
+   /*---------------------------------*/
+  while(1) {
+     etimer_set(&timer,SENSOR_READ_INTERVAL);
+     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+     val=power_sensor.value(0);
+     printf("Valore letto: %d\n", val);
+     if(val<OFFSET) printf("Errore di lettura!!\n");
+     else {
+           printf("Il valore corretto: %d.%d\n", (int)((val-OFFSET)), (int)((val-OFFSET))*100);
+	   val_int = (int)((val-OFFSET)*SCALE_FACTOR);
+           val_dec = (int)((val-OFFSET)*SCALE_FACTOR)*100;
+ 	  }
+   }
   PROCESS_END();
 }
 
