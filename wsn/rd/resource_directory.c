@@ -43,7 +43,7 @@
 #include "net/rpl/rpl.h"
 
 #include "erbium.h"
-#include "er-coap-13.h"
+#include "er-coap-13-engine.h"
 
 #include "net/netstack.h"
 #include "dev/slip.h"
@@ -61,15 +61,14 @@
 #include "drivers/temp.h"
 #include "drivers/motion.h"
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
 // COAP_DEFAULT_PORT = 5683
-#define REGISTER_PORT	UIP_HTONS(COAP_DEFAULT_PORT)
-#define GET_SENSOR_PORT	UIP_HTONS(COAP_DEFAULT_PORT+1)
-#define PUT_SENSOR_PORT	UIP_HTONS(COAP_DEFAULT_PORT+2)
+#define REMOTE_PORT	UIP_HTONS(COAP_DEFAULT_PORT)
 
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
@@ -93,9 +92,7 @@ struct resource {
 };
  
 static struct resource rd[]={
-	{.address=0, .n="/sound", .v="0", .u="db", .rt="sensor"},
-	{.address=0, .n="/light", .v="0", .u="lux", .rt="dimmer"},
-	{.address=0, .n="/fan", .v="0", .u="", .rt="switch"}
+	{.address=0, .n="/fan", .v="0", .u="on/off", .rt="switch"}
 }; 
 
 PROCESS(border_router_process, "Border router process");
@@ -185,21 +182,22 @@ void client_put_handler(void *response) {
   //PRINTA("Reply: %d %.*s\n", status, len, (char*) chunk);
 
 // Handle CoAP GET response
-void client_get_handler(void *response) {
+/*void client_get_handler(void *response) {
 	// TODO: add resource to local RD, and verify duplicates?
 	PRINTA("client_get_handler()");
-}
+}*/
 
-void register_sensor_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+RESOURCE(register_resource, METHOD_POST, "register", "title=\"Register resource\";rt=\"Text\"");
+
+void register_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
 	// FIXME: Request resources' list to the new sensor
 	uint8_t length;
+	puts("register_resource_handler()");
 	REST.set_header_content_type(response, REST.type.APPLICATION_JSON); 
 	REST.set_header_etag(response, (uint8_t *) &length, 1);
 	REST.set_response_status(response, REST.status.OK);
 	leds_toggle(LEDS_BLUE);
 }
-
-EVENT_RESOURCE(register_sensor, METHOD_POST, "register", "title=\"register_resource\";rt=\"Text\"");
 
 int find_resource(char *name) {
 	int i;
@@ -229,9 +227,9 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
 }
 
 // TODO: to remove
-PROCESS(button_on_update_process, "Send HTTP request with button process");
+PROCESS(button_coap_process, "COAP CLIENT");
 
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process,&button_on_update_process);
+AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process,&button_coap_process);
 
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
@@ -262,32 +260,19 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 		pch = strtok(s->filename, "?");
 
 		// First find the resource
-		for(i=0;i<rd_size;i++) if(strcmp(pch, rd[i].n) == 0) break;
+		i = find_resource(s->filename);
 
-		if(i != rd_size) {
-			pch = strtok(NULL, "?");
-			if(pch != NULL) {
-				pch = strtok(pch, "=");
-				if(pch != NULL && strcmp(pch, "v") == 0) {
-					pch = strtok(NULL, "=");
-					if(pch != NULL) {
-						put_resource = rd[i].n;
-						put_value = pch;
-						coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-  					coap_set_header_uri_path(request, put_resource+1);
-						snprintf(buf, sizeof(buf)-1, "v=%s", put_value);
-  					coap_set_header_uri_query(request, buf);
-						//COAP_BLOCKING_REQUEST(&(rd[i].address), PUT_SENSOR_PORT, request, client_put_handler);
-						s->http_header = coap_success ? HTTP_HEADER_200 : HTTP_HEADER_502;
-						snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
-					}	else {
-						s->http_header = HTTP_HEADER_400;
-						snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
-					}
-				} else {
-					s->http_header = HTTP_HEADER_400;
-					snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
-				}
+		if(i != -1) {
+			if((pch = strtok(NULL, "?")) != NULL && (pch = strtok(pch, "=")) != NULL && strcmp(pch, "v") == 0 && (pch = strtok(NULL, "=")) != NULL) {
+				put_resource = rd[i].n;
+				put_value = pch;
+				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+				coap_set_header_uri_path(request, put_resource+1);
+				snprintf(buf, sizeof(buf)-1, "v=%s", put_value);
+				coap_set_header_uri_query(request, buf);
+				//COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
+				s->http_header = coap_success ? HTTP_HEADER_200 : HTTP_HEADER_502;
+				snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
 			} else {
 				s->http_header = HTTP_HEADER_400;
 				snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
@@ -328,6 +313,19 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 }
+
+/*---------------------------------------------------------------------------*/
+
+void client_observing_handler(void *response) {
+  const uint8_t *chunk;
+  puts("OSSERVATA");
+  int len = coap_get_payload(response, &chunk);
+  int status = ((coap_packet_t*)response)->code;
+  printf("Reply: %d %.*s\n", status, len, (char*) chunk);
+}
+
+/*---------------------------------------------------------------------------*/
+
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
 {
@@ -385,12 +383,12 @@ PROCESS_THREAD(border_router_process, ev, data)
 
 	// Initialize REST server and REST resources
 	rest_init_engine();
-	rest_activate_event_resource(&resource_register_sensor);
+	rest_activate_event_resource(&resource_register_resource);
 
-  for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
-	PRINTF("%s: initializing driver\n", driver[i]->name);
-	driver[i]->init();
-  }
+	for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
+		PRINTF("%s: initializing driver\n", driver[i]->name);
+		driver[i]->init();
+	}
 
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ledETimer));
@@ -401,8 +399,28 @@ PROCESS_THREAD(border_router_process, ev, data)
   PROCESS_END();
 }
 
+PROCESS_THREAD(button_coap_process, ev, data) {
+	PROCESS_BEGIN();
+
+	static uip_ipaddr_t server_ipaddr;
+	static const char* service_url = "alarm";
+	uip_ip6addr(&server_ipaddr, 0xaaaa, 0, 0, 0, 0xc30c, 0, 0, 2);
+
+	printf("Button thread started\n");
+	SENSORS_ACTIVATE(button_sensor);
+	while(1) {
+	  PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
+    printf("MI STO REGISTRANDO!\n");
+		coap_obs_request_registration(&server_ipaddr, REMOTE_PORT, service_url, client_observing_handler, NULL);
+    printf("REGISTRATO!\n");
+	}
+
+	PROCESS_END();
+}
+
 /*---------------------------------------------------------------------------*/
-static void handle_request(struct psock *ps) {
+
+/*static void handle_request(struct psock *ps) {
 		PSOCK_BEGIN(ps);
 
 		static char buf[256];
@@ -412,7 +430,6 @@ static void handle_request(struct psock *ps) {
 		SEND_STRING(ps, buf);
 
 		PSOCK_CLOSE(&ps);
-		printf("Connection closed.\n");
 
 		PSOCK_END(ps);
 }
@@ -431,11 +448,9 @@ PROCESS_THREAD(button_on_update_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
 		
 		tcp_connect(&webapp, UIP_HTONS(80), NULL);
-		printf("Connecting...\n");
 		
 		PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
 		if(uip_connected()) {
-			printf("Connected.\n");
 		  PSOCK_INIT(&ps, buffer, sizeof(buffer));
 			while(!(uip_aborted() || uip_closed() || uip_timedout())) {
 				PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
@@ -444,7 +459,7 @@ PROCESS_THREAD(button_on_update_process, ev, data)
     } 
   }
   PROCESS_END();
-}
+}*/
 
 
 /*---------------------------------------------------------------------------*/
