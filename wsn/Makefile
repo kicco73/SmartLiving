@@ -10,13 +10,16 @@ CFLAGS += $(SENSORS)
 APPS += er-coap-13 erbium
 WITH_UIP6 = 1
 UIP_CONF_IPV6 = 1
+WITH_COAP=13
+REST=coap_rest_implementation
+
 # code size optimization
 SMALL = 1
 
 all: server
 
 board1: drivers/motion.o
-	make TARGET=z1 SENSORS="$(SENSORS) -DWITH_MOTION_SENSOR -Wl,drivers/motion.o" -C rd
+	make TARGET=z1 SENSORS="$(SENSORS) -DWITH_MOTION_SENSOR -Wl,../drivers/motion.o" -C rd
 
 board2: drivers/sound.o drivers/fan.o drivers/light.o drivers/temp.o
 	make TARGET=z1 SENSORS="$(SENSORS) -DWITH_SOUND_SENSOR -Wl,drivers/sound.o -DWITH_FAN_SENSOR -Wl,drivers/fan.o -DWITH_LIGHT_SENSOR -Wl,drivers/light.o -DWITH_TEMP_SENSOR -Wl,drivers/temp.o" all

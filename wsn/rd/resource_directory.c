@@ -128,7 +128,6 @@ AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 #if WEBSERVER_CONF_ROUTE_LINKS
 #define BUF_USES_STACK 1
 #endif
-
 #if 0
 static driver_t driver[] = {
 #ifdef WITH_POWER_SENSOR
@@ -160,7 +159,6 @@ static driver_t driver[] = {
 #endif
 };
 #endif
-
 static char *put_resource;
 static char *put_value;
 static char coap_success;
@@ -445,14 +443,12 @@ PROCESS_THREAD(border_router_process, ev, data)
 	// Initialize REST server and REST resources
 	rest_init_engine();
 	rest_activate_event_resource(&resource_register_resource);
-
 #if 0
 	for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
 		PRINTF("%s: initializing driver\n", driver[i]->name);
 		driver[i]->init();
 	}
 #endif
-
   while(1) {
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&observeETimer));
     etimer_restart(&observeETimer);
