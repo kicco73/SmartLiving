@@ -12,8 +12,8 @@
 
 const struct sensors_sensor power_sensor;
 
-static OFFSET = 100;
-static SCALE_FACTOR=0.354;
+static int OFFSET = 100;
+static float SCALE_FACTOR=0.354;
 
 PERIODIC_RESOURCE(power_resource, METHOD_GET, "power W", "title=\"power sensor resource\";rt=\"Text\";obs", 5*CLOCK_SECOND);
 
