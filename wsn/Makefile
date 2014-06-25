@@ -1,4 +1,4 @@
-CONTIKI = /home/user/contiki-2.6
+CONTIKI = /home/user/contiki-2.7
 CONTIKI_PROJECT = sensorigniter
 LDFLAGS += $(SENSORS)
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"

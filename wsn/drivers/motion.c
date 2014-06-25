@@ -28,12 +28,6 @@ static int sensor_value(int type) {
 
 /*---------------------------------------------------------------------------*/
 
-static void sensor_notify() {
-	// TODO
-}
-
-/*---------------------------------------------------------------------------*/
-
 static int sensor_status(int type) {
   return sky_sensors_status(INPUT_CHANNEL, type);
 }
@@ -74,13 +68,14 @@ void motion_resource_periodic_handler(resource_t *r) {
 
 /*---------------------------------------------------------------------------*/
 
-SENSORS_SENSOR(motion_sensor, "motion sensor", sensor_value, sensor_configure, sensor_status);
-
+SENSORS_SENSOR(motion_sensor, "motion", sensor_value, sensor_configure, sensor_status);
 
 const struct Driver MOTION_DRIVER = {
-	.name = "motion sensor",
+	.name = "motion",
+	.description = "motion sensor",
+	.unit = "on/off",
+	.type = "sensor",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/

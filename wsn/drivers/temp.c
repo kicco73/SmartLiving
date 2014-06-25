@@ -35,13 +35,6 @@ static void sensor_init() {
 	rest_activate_periodic_resource(&periodic_resource_temp_resource);
 }
 
-
-/*---------------------------------------------------------------------------*/
-
-static void sensor_notify() {
-	// TODO
-}
-
 /*---------------------------------------------------------------------------*/
 
 void temp_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
@@ -69,17 +62,14 @@ void temp_resource_periodic_handler(resource_t *r) {
 	REST.notify_subscribers(r, event_counter++, notification);
 }
 
-
 /*---------------------------------------------------------------------------*/
-
-/*---------------------------------------------------------------------------*/
-
-
 
 struct Driver TEMP_DRIVER = {
-	.name = "temperature sensor",
+	.name = "temp",
+	.description = "temperature sensor",
+	.unit = "C",
+	.type = "sensor",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/

@@ -22,12 +22,6 @@ static void sensor_init() {
 
 /*---------------------------------------------------------------------------*/
 
-static void sensor_notify() {
-	// TODO
-}
-
-/*---------------------------------------------------------------------------*/
-
 void fan_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
 	int8_t length;
 	uint8_t method = REST.get_method_type(request);
@@ -52,9 +46,11 @@ void fan_resource_handler(void* request, void* response, uint8_t *buffer, uint16
 /*---------------------------------------------------------------------------*/
 
 const struct Driver FAN_DRIVER = {
-	.name = "fan relay",
+	.name = "fan",
+	.description = "fan relay",
+	.unit = "on/off",
+	.type = "switch",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/

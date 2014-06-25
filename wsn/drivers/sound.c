@@ -30,12 +30,6 @@ static int sensor_value(int type) {
 
 /*---------------------------------------------------------------------------*/
 
-static void sensor_notify() {
-	// TODO
-}
-
-/*---------------------------------------------------------------------------*/
-
 static int sensor_status(int type) {
 
   return sky_sensors_status(INPUT_CHANNEL, type);
@@ -82,9 +76,11 @@ SENSORS_SENSOR(sound_sensor, "sound sensor", sensor_value, sensor_configure, sen
 
 
 const struct Driver SOUND_DRIVER = {
-	.name = "sound sensor",
+	.name = "sound",
+	.description = "sound sensor",
+	.unit = "dB",
+	.type = "sensor",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/

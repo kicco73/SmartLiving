@@ -12,12 +12,10 @@
 
 const struct sensors_sensor power_sensor;
 
-static OFFSET = 100;
-static SCALE_FACTOR=0.354;
+#define OFFSET 100
+#define SCALE_FACTOR 0.354
 
 PERIODIC_RESOURCE(power_resource, METHOD_GET, "power W", "title=\"power sensor resource\";rt=\"Text\";obs", 5*CLOCK_SECOND);
-
-
 
 /*---------------------------------------------------------------------------*/
 
@@ -88,12 +86,14 @@ static void sensor_notify() {
 
 /*---------------------------------------------------------------------------*/
 
-SENSORS_SENSOR(power_sensor, "power sensor", sensor_value, sensor_configure, sensor_status);
+SENSORS_SENSOR(power_sensor, "power", sensor_value, sensor_configure, sensor_status);
 
 const struct Driver POWER_DRIVER = {
-	.name = "power sensor",
+	.name = "power",
+	.description = "power sensor",
+	.unit = "W",
+	.type = "sensor",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/

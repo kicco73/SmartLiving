@@ -25,12 +25,6 @@ static int sensor_value(int type) {
 
 /*---------------------------------------------------------------------------*/
 
-static void sensor_notify() {
-	// TODO
-}
-
-/*---------------------------------------------------------------------------*/
-
 static int sensor_status(int type) {
 	// TODO
   	return 0;
@@ -73,13 +67,15 @@ void dimmer_resource_periodic_handler(resource_t *r) {
 
 /*---------------------------------------------------------------------------*/
 
-SENSORS_SENSOR(dimmer_sensor, "dimmer sensor", sensor_value, sensor_configure, sensor_status);
-PERIODIC_RESOURCE(dimmer_resource, METHOD_GET|METHOD_PUT, "on/off", "title=\"dimmer status;rt=\"Text\";obs", 5*CLOCK_SECOND);
+SENSORS_SENSOR(dimmer_sensor, "dimmer actuator", sensor_value, sensor_configure, sensor_status);
+PERIODIC_RESOURCE(dimmer_resource, METHOD_GET|METHOD_PUT, "dimmer", "title=\"dimmer actuator\";rt=\"Text\";obs", 5*CLOCK_SECOND);
 
 struct Driver DIMMER_DRIVER = {
-	.name = "dimmer sensor",
+	.name = "dimmer",
+	.description = "dimmer actuator",
+	.unit = "%",
+	.type = "dimmer",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/

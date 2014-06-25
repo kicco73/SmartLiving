@@ -19,12 +19,6 @@ static void sensor_init() {
 }
 
 /*---------------------------------------------------------------------------*/
-static void sensor_notify() {
-	// TODO
-}
-
-
-/*---------------------------------------------------------------------------*/
 
 void light_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
 	int8_t length;
@@ -41,6 +35,7 @@ void light_resource_handler(void* request, void* response, uint8_t *buffer, uint
 }
 
 /*---------------------------------------------------------------------------*/
+
 void light_resource_periodic_handler(resource_t *r) {
 	static int event_counter;
 	char buffer[16];
@@ -51,15 +46,14 @@ void light_resource_periodic_handler(resource_t *r) {
 	REST.notify_subscribers(r, event_counter++, notification);
 }
 
-
 /*---------------------------------------------------------------------------*/
 
-
-
 const struct Driver LIGHT_DRIVER = {
-	.name = "light sensor",
+	.name = "light",
+	.description = "light sensor",
+	.unit = "lux",
+	.type = "sensor",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/

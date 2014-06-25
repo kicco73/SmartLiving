@@ -25,12 +25,6 @@ static int sensor_value(int type) {
 
 /*---------------------------------------------------------------------------*/
 
-static void sensor_notify() {
-	// TODO
-}
-
-/*---------------------------------------------------------------------------*/
-
 static int sensor_status(int type) {
 	// TODO
   	return 0;
@@ -62,12 +56,14 @@ void co2_resource_handler(void* request, void* response, uint8_t *buffer, uint16
 /*---------------------------------------------------------------------------*/
 
 SENSORS_SENSOR(co2_sensor, "CO2 sensor", sensor_value, sensor_configure, sensor_status);
-PERIODIC_RESOURCE(co2_resource, METHOD_GET, "on/off", "title=\"CO2 sensor;rt=\"Text\";obs", 5*CLOCK_SECOND);
+PERIODIC_RESOURCE(co2_resource, METHOD_GET, "co2", "title=\"CO2 sensor\";rt=\"Text\";obs", 5*CLOCK_SECOND);
 
 const struct Driver CO2_DRIVER = {
-	.name = "CO2 sensor",
+	.name = "co2",
+	.description = "CO2 sensor",
+	.unit = "???",
+	.type = "sensor",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/
