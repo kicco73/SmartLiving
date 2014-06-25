@@ -2,6 +2,7 @@
 #include "contiki.h"
 #include "erbium.h"
 #include "er-coap-13.h"
+#include "uip-debug.h"
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
 #include "light.h"
