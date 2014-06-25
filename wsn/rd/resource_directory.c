@@ -86,6 +86,7 @@ static uint8_t prefix_set;
 
 static coap_packet_t request[1];
 static int num_res = 0;
+static char to_observe[MAX_NUM_RESOURCES];
 
 struct resource {
 	uip_ipaddr_t address;
@@ -166,7 +167,6 @@ static char coap_success;
 
 // Handle CoAP PUT response
 void client_put_handler(void *response) {
-	// FIXME: update resource in local RD
 	int i;
   int status = ((coap_packet_t*)response)->code;
 
@@ -200,7 +200,6 @@ void register_resource_handler(void* request, void* response, uint8_t *buffer, u
 		uip_ipaddr_t new_ip;
 		struct resource new_resource;
 		
-		// TODO
 		REST.set_header_content_type(response, REST.type.TEXT_PLAIN); 
 		REST.set_header_etag(response, (uint8_t *) &length, 1);
 		len = coap_get_payload(request, &chunk);
@@ -210,33 +209,48 @@ void register_resource_handler(void* request, void* response, uint8_t *buffer, u
 		uiplib_ipaddrconv(pch, &new_ip);
 
 		for(pch = strtok(NULL, "\n\t"); pch != NULL; pch = strtok(NULL, "\n\t")) {
-			printf("A\n");
 			strcpy(n, pch);
 			strcpy(v, "0");
 			strcpy(u, pch = strtok(NULL, "\n\t"));
 			strcpy(rt, pch = strtok(NULL, "\n\t"));
 
-			insert_resource(&new_ip, n, v, u, rt);
-
-			printf("B\n");
+			if(insert_resource(&new_ip, n, v, u, rt) == -1) {
+				// RD full!
+				REST.set_response_status(response, REST.status.SERVICE_UNAVAILABLE);
+				return;
+			}
 		}
-
 		REST.set_response_status(response, REST.status.OK);
-		// printf("payload: %.*s\n", len, (char*) chunk);
 	} else
 		REST.set_response_status(response, REST.status.BAD_REQUEST);
 }
 
 int insert_resource(uip_ipaddr_t *ip_addr, char *n, char *v, char *u, char *rt) {
-	if(num_res == sizeof(rd)) return -1;
+	int i, j; // i: place where to put the new resource, j: index of the possible resource already present
 
-	uip_ipaddr_copy(&(rd[num_res].address), ip_addr);
-	strcpy(rd[num_res].n, n);
-	strcpy(rd[num_res].v, v);
-	strcpy(rd[num_res].u, u);
-	strcpy(rd[num_res].rt, rt);
+	// Not enough space in memory for this new resource
+	if(num_res == MAX_NUM_RESOURCES) return -1;
 
-	return ++num_res;
+	i = num_res;
+
+	// Resource already present, then overwrite
+	if((j = find_resource(n)) != -1) {
+		i = j;
+	}
+
+	uip_ipaddr_copy(&(rd[i].address), ip_addr);
+	strcpy(rd[i].n, n);
+	if(i != j) {
+		puts("New resource!");
+		strcpy(rd[i].v, v); // change the value only if new resource
+	}
+	strcpy(rd[i].u, u);
+	strcpy(rd[i].rt, rt);
+
+	if(strcmp(rt, "sensor") == 0) to_observe[i] = 1; // observe only sensors
+
+	if(i != j) ++num_res;
+	return num_res;
 }
 
 int find_resource(char *name) {
@@ -281,9 +295,12 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 		if(!strncmp(s->filename, "/" ,2)) { // GET all resources
 			strcpy(s->http_output_payload,"[");	  
 			for(i=0;i<num_res;i++) {
+				printf("Resource %d\n", i);
 				sprintf(s->http_output_payload+strlen(s->http_output_payload),"{\"n\":\"%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<num_res?',':'\0');
+				puts("Done");
 			}
 			sprintf(s->http_output_payload+strlen(s->http_output_payload),"]");
+			puts("Printed closed square bracked");
 
 		} else { // GET a single resource
 			i = find_resource(s->filename);
@@ -300,25 +317,28 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
 		// First find the resource
 		i = find_resource(s->filename);
+		printf("Found resource %d\n", i);
 
 		if(i != -1) {
 			if((pch = strtok(NULL, "?")) != NULL && (pch = strtok(pch, "=")) != NULL && strcmp(pch, "v") == 0 && (pch = strtok(NULL, "=")) != NULL) {
 				put_resource = rd[i].n;
+				printf("put_resource: %s\n", put_resource);
 				put_value = pch;
+				printf("put_value: %s\n", put_value);
 				coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 				coap_set_header_uri_path(request, put_resource+1);
-				snprintf(buf, sizeof(buf)-1, "v=%s", put_value);
+				sprintf(buf, "v=%s", put_value);
 				coap_set_header_uri_query(request, buf);
 				//COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
 				s->http_header = coap_success ? HTTP_HEADER_200 : HTTP_HEADER_502;
-				snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
+				sprintf(s->http_output_payload, "{}");
 			} else {
 				s->http_header = HTTP_HEADER_400;
-				snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
+				sprintf(s->http_output_payload, "{}");
 			}
 		} else {
 			s->http_header = HTTP_HEADER_404;
-			snprintf(s->http_output_payload, sizeof(s->http_output_payload)-1, "{}");
+			sprintf(s->http_output_payload, "{}");
 		}
 	}
 }
@@ -367,9 +387,9 @@ void client_observing_handler(void *response) {
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
 {
-  static struct etimer et, ledETimer;
+  static struct etimer et, observeETimer;
   rpl_dag_t *dag;
-  int i;
+  static int i;
 
   PROCESS_BEGIN();
 
@@ -414,7 +434,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   print_local_addresses();
 #endif
 
-  etimer_set(&ledETimer, CLOCK_SECOND >> 1);
+  etimer_set(&observeETimer, CLOCK_SECOND >> 2);
 
 	rd = (struct resource*) malloc(MAX_NUM_RESOURCES*sizeof(struct resource));
 	memset(rd, 0, MAX_NUM_RESOURCES*sizeof(struct resource));
@@ -434,9 +454,18 @@ PROCESS_THREAD(border_router_process, ev, data)
 #endif
 
   while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&ledETimer));
-    etimer_restart(&ledETimer);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&observeETimer));
+    etimer_restart(&observeETimer);
     leds_toggle(LEDS_GREEN);
+
+		for(i=0; i < num_res; i++) {
+			if(to_observe[i]) {
+				puts("Init new observing");
+				coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, rd[i].n, client_observing_handler, NULL);
+				puts("Observed");
+				to_observe[i] = 0;
+			}
+		}
   }
 
   PROCESS_END();
