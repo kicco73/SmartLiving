@@ -57,7 +57,7 @@ static driver_t driver[] = {
 };
 
 #define LED_TOGGLE_INTERVAL (CLOCK_SECOND >> 3)
-#define REGISTER_INTERVAL (CLOCK_SECOND << 6)
+#define REGISTER_INTERVAL (CLOCK_SECOND << 7)
 
 /*---------------------------------------------------------------------------*/
 
@@ -93,21 +93,24 @@ static void network_init() {
 
 static void drivers_init() {
 	int i;
-	rest_init_engine();
-	for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
-		PRINTF("%s: initializing driver\n", driver[i]->name);
-		driver[i]->init();
+	if(!already_inited) {
+		rest_init_engine();
+		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
+			PRINTF("%s: initializing driver\n", driver[i]->name);
+			driver[i]->init();
+		}
+		already_inited = 1;
 	}
 }
 
 /*---------------------------------------------------------------------------*/
 
-/* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
+/* This function is the callback for COAP_BLOCKING_REQUEST() in order to 
+   handle responses. */
+
 static void client_chunk_handler(void *response) {
 	PRINTF("*** RESOURCE DIRECTORY REGISTERED!\n");
-	if(!already_inited)
-		drivers_init();
-	already_inited = 1;
+	drivers_init();
 	registered = 1;
 }
 
@@ -183,7 +186,7 @@ PROCESS_THREAD(status_process, ev, data) {
 
 	PROCESS_BEGIN();
 
-  	PRINTF("CoAP observable event server started\n");
+  	PRINTF("Led status process started\n");
 	etimer_set(&timer, LED_TOGGLE_INTERVAL);
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));

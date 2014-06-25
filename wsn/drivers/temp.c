@@ -55,11 +55,13 @@ void temp_resource_handler(void* request, void* response, uint8_t *buffer, uint1
 void temp_resource_periodic_handler(resource_t *r) {
 	static int event_counter;
 	char buffer[16];
+	PRINTF("*** temp_resource_periodic_handler(): called!\n");
 	read_temp(buffer);
 	coap_packet_t notification[1];
 	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
+	PRINTF("*** temp_resource_periodic_handler(): done!\n");
 }
 
 /*---------------------------------------------------------------------------*/

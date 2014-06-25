@@ -39,11 +39,13 @@ void light_resource_handler(void* request, void* response, uint8_t *buffer, uint
 void light_resource_periodic_handler(resource_t *r) {
 	static int event_counter;
 	char buffer[16];
+	PRINTF("*** light_resource_periodic_handler(): called!\n");
 	sprintf(buffer, "%d", light_ziglet_read());
 	coap_packet_t notification[1];
 	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
+	PRINTF("*** light_resource_periodic_handler(): done!\n");
 }
 
 /*---------------------------------------------------------------------------*/
