@@ -66,6 +66,7 @@ PROCESS(status_process, "led status feedback");
 AUTOSTART_PROCESSES(&status_process, &registration_process);
 
 static char registered = 0;
+static char already_inited = 0;
 
 /*---------------------------------------------------------------------------*/
 
@@ -85,6 +86,7 @@ static void network_init() {
 			puts("");
 		}
 	}
+	coap_receiver_init();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -102,9 +104,10 @@ static void drivers_init() {
 
 /* This function is will be passed to COAP_BLOCKING_REQUEST() to handle responses. */
 static void client_chunk_handler(void *response) {
-	const uint8_t *chunk;
-	int len = coap_get_payload(response, &chunk);
-	PRINTF("RESOURCE DIRECTORY REPLY: %.*s", len, (char *)chunk);
+	PRINTF("*** RESOURCE DIRECTORY REGISTERED!\n");
+	if(!already_inited)
+		drivers_init();
+	already_inited = 1;
 	registered = 1;
 }
 
@@ -144,26 +147,30 @@ PROCESS_THREAD(registration_process, ev, data) {
 	static coap_packet_t request[1];
 	static uint8_t buf[256];
 	static struct etimer timer;
+	static const char* service_url = "register";
 
 	PROCESS_BEGIN();
 	PRINTF("Registration process started\n");
 	network_init();
-	drivers_init();
 	SENSORS_ACTIVATE(button_sensor);
-	uip_ip6addr(&server_ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 1);
+	uip_ip6addr(&server_ipaddr, 0xaaaa, 0, 0, 0, 0xc30c, 0, 0, 1);
 	while(1) {
-		PRINTF("*** REGISTERING ALL RESOURCES TO RESOURCE DIRECTORY\n");
 		registered = 0;
+		PRINTF("*** REGISTERING ALL RESOURCES TO RESOURCE DIRECTORY\n");
 		sprint_ipaddr(buf, &ipaddr);
 		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++)
-			sprintf(buf+strlen(buf), "\n%s\t%s\t%s", driver[i]->name, driver[i]->unit, driver[i]->type);
+			sprintf(buf+strlen(buf), "\n/%s\t%s\t%s", driver[i]->name, driver[i]->unit, driver[i]->type);
 		strcat(buf, "\n");
+		PRINTF("*** SENDING MESSAGE WITH PAYLOAD: %s\n", buf);
 		coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-		coap_set_header_uri_path(request, "register");
+		coap_set_header_uri_path(request, service_url);
 		coap_set_payload(request, buf, strlen(buf));
 		COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
-		etimer_set(&timer, REGISTER_INTERVAL);
-		PROCESS_WAIT_EVENT_UNTIL(!registered || (ev == sensors_event && data == &button_sensor) || etimer_expired(&timer));
+		PRINTF("*** EXITED\n");
+		if(registered) {
+			etimer_set(&timer, REGISTER_INTERVAL);
+			PROCESS_WAIT_EVENT_UNTIL((ev == sensors_event && data == &button_sensor) || etimer_expired(&timer));
+		}
 	}
 	PROCESS_END();
 }
@@ -186,7 +193,7 @@ PROCESS_THREAD(status_process, ev, data) {
 			leds_on(registered? LEDS_GREEN : LEDS_RED);
 			break;
 		case 1:
-		case 4:
+		case 3:
 			if(registered) {
 				leds_on(LEDS_GREEN);
 				break;

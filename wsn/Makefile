@@ -10,6 +10,9 @@ CFLAGS += $(SENSORS)
 APPS += er-coap-13 erbium
 WITH_UIP6 = 1
 UIP_CONF_IPV6 = 1
+WITH_COAP=13
+REST=coap_rest_implementation
+
 # code size optimization
 SMALL = 1
 
