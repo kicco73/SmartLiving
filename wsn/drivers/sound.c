@@ -2,6 +2,7 @@
 #include "contiki.h"
 #include "erbium.h"
 #include "er-coap-13.h"
+#include "uip-debug.h"
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
 #include "sound.h"
@@ -26,12 +27,6 @@ static void sensor_init() {
 static int sensor_value(int type) {
 
   	return SOUND_MEM;
-}
-
-/*---------------------------------------------------------------------------*/
-
-static void sensor_notify() {
-	// TODO
 }
 
 /*---------------------------------------------------------------------------*/
@@ -68,11 +63,13 @@ void sound_resource_handler(void* request, void* response, uint8_t *buffer, uint
 void sound_resource_periodic_handler(resource_t *r) {
 	static int event_counter;
 	char buffer[16];
+	PRINTF("*** sound_resource_periodic_handler(): called!\n");
 	sprintf(buffer, "%d", 200*sensor_value(0));
 	coap_packet_t notification[1];
 	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
+	PRINTF("*** sound_resource_periodic_handler(): done!\n");
 }
 
 
@@ -82,9 +79,11 @@ SENSORS_SENSOR(sound_sensor, "sound sensor", sensor_value, sensor_configure, sen
 
 
 const struct Driver SOUND_DRIVER = {
-	.name = "sound sensor",
+	.name = "sound",
+	.description = "sound sensor",
+	.unit = "dB",
+	.type = "sensor",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/

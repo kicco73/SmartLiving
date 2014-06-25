@@ -50,6 +50,7 @@
 #include "dev/leds.h"
 #include "dev/button-sensor.h"
 #include "sys/etimer.h"
+
 #if 0
 #include "drivers/power.h"
 #include "drivers/light.h"
@@ -70,6 +71,8 @@
 // COAP_DEFAULT_PORT = 5683
 #define REMOTE_PORT	UIP_HTONS(COAP_DEFAULT_PORT)
 
+#define MAX_NUM_RESOURCES 10
+
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
 
@@ -82,18 +85,17 @@ static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 
 static coap_packet_t request[1];
+static int num_res = 0;
 
 struct resource {
 	uip_ipaddr_t address;
-	char *n;
-	char *v;
-	char *u;
-	char *rt;
+	char n[8];
+	char v[8];
+	char u[8];
+	char rt[16];
 };
  
-static struct resource rd[]={
-	{.address=0, .n="/fan", .v="0", .u="on/off", .rt="switch"}
-}; 
+static struct resource *rd;
 
 PROCESS(border_router_process, "Border router process");
 
@@ -169,7 +171,7 @@ void client_put_handler(void *response) {
 	if(status == REST.status.OK || status == REST.status.CHANGED) {
 		i = find_resource(put_resource);
 		if(i != -1) {
-			rd[i].v = put_value;
+			memcpy(rd[i].v, put_value, strlen(put_value)+1);
 			coap_success = 1;
 		}
 	} else {
@@ -182,31 +184,63 @@ void get_resources_handler(void *response) {
 	puts("get_resources_handler()");
 }
 
-RESOURCE(register_resource, METHOD_POST, "register", "title=\"Register resource\";rt=\"Text\"");
+RESOURCE(register_resource, METHOD_PUT, "register", "title=\"Register resource\";rt=\"Text\"");
 
 void register_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
 	uint8_t length;
 	uint8_t method = REST.get_method_type(request);
-	if(method & METHOD_POST) {
-		const char *tmpbuf;
-		//const uint8_t *chunk;
-		//int len;
-		REST.get_post_variable(request, "v", &tmpbuf);
+	if(method & METHOD_PUT) {
+		const uint8_t **chunk;
+		char *pch;
+		int len;
+		char n[16], v[16], u[16], rt[16];
+		
+		uip_ipaddr_t new_ip;
+		struct resource new_resource;
+		
 		// TODO
 		REST.set_header_content_type(response, REST.type.TEXT_PLAIN); 
 		REST.set_header_etag(response, (uint8_t *) &length, 1);
+		len = coap_get_payload(request, &chunk);
+
+		printf("len: %d, payload: %s\n", len, chunk);
+		pch = strtok(chunk, "\n\t");
+		uiplib_ipaddrconv(pch, &new_ip);
+
+		for(pch = strtok(NULL, "\n\t"); pch != NULL; pch = strtok(NULL, "\n\t")) {
+			printf("A\n");
+			strcpy(n, pch);
+			strcpy(v, "0");
+			strcpy(u, pch = strtok(NULL, "\n\t"));
+			strcpy(rt, pch = strtok(NULL, "\n\t"));
+
+			insert_resource(&new_ip, n, v, u, rt);
+
+			printf("B\n");
+		}
+
 		REST.set_response_status(response, REST.status.OK);
-		//len = coap_get_header_proxy_uri(request, &chunk);
-		//printf("proxy_uri: %.*s\n", len, (char*) chunk);
+		// printf("payload: %.*s\n", len, (char*) chunk);
 	} else
 		REST.set_response_status(response, REST.status.BAD_REQUEST);
 }
 
+int insert_resource(uip_ipaddr_t *ip_addr, char *n, char *v, char *u, char *rt) {
+	if(num_res == sizeof(rd)) return -1;
+
+	uip_ipaddr_copy(&(rd[num_res].address), ip_addr);
+	strcpy(rd[num_res].n, n);
+	strcpy(rd[num_res].v, v);
+	strcpy(rd[num_res].u, u);
+	strcpy(rd[num_res].rt, rt);
+
+	return ++num_res;
+}
+
 int find_resource(char *name) {
 	int i;
-	int rd_size=sizeof(rd)/sizeof(rd[0]);
 
-	for(i=0;i<rd_size;i++) {
+	for(i=0;i<num_res;i++) {
 		if(strcmp(name, rd[i].n) == 0) {
 			return i;
 		}
@@ -239,15 +273,15 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 {
   static int i;
   char buf[128], *pch;
-	int rd_size=sizeof(rd)/sizeof(rd[0]);
 
 	if(s->method == GET) {
 
 		if(!strncmp(s->filename, "/" ,2)) { // GET all resources
 			strcpy(s->http_output_payload,"[");	  
-			for(i=0;i<rd_size;i++) {
-				sprintf(s->http_output_payload+strlen(s->http_output_payload),"{\"n\":\"%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<rd_size?',':']');
+			for(i=0;i<num_res;i++) {
+				sprintf(s->http_output_payload+strlen(s->http_output_payload),"{\"n\":\"%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<num_res?',':'\0');
 			}
+			sprintf(s->http_output_payload+strlen(s->http_output_payload),"]");
 
 		} else { // GET a single resource
 			i = find_resource(s->filename);
@@ -379,6 +413,9 @@ PROCESS_THREAD(border_router_process, ev, data)
 #endif
 
   etimer_set(&ledETimer, CLOCK_SECOND >> 1);
+
+	rd = (struct resource*) malloc(MAX_NUM_RESOURCES*sizeof(struct resource));
+	memset(rd, 0, MAX_NUM_RESOURCES*sizeof(struct resource));
 
 	// Initialize CoAP client
 	coap_receiver_init();

@@ -14,6 +14,7 @@
 #include "contiki-net.h"
 #include "erbium.h"
 #include "er-coap-13.h"
+#include "er-coap-13-engine.h"
 
 #include "drivers/power.h"
 #include "drivers/light.h"
@@ -55,19 +56,24 @@ static driver_t driver[] = {
 #endif
 };
 
-#define LED_TOGGLE_INTERVAL (CLOCK_SECOND >> 1)
+#define LED_TOGGLE_INTERVAL (CLOCK_SECOND >> 3)
+#define REGISTER_INTERVAL (CLOCK_SECOND << 7)
 
 /*---------------------------------------------------------------------------*/
 
-PROCESS(server_process, "CoAP server process with observable resources");
-PROCESS(button_process, "Button handler for resource data delivery");
-AUTOSTART_PROCESSES(&server_process, &button_process);
+PROCESS(registration_process, "registration handler for resource data delivery");
+PROCESS(status_process, "led status feedback");
+AUTOSTART_PROCESSES(&status_process, &registration_process);
+
+static char registered = 0;
+static char already_inited = 0;
 
 /*---------------------------------------------------------------------------*/
+
+static uip_ipaddr_t ipaddr;
 
 static void network_init() {
 	int i, state;
-	static uip_ipaddr_t ipaddr;
 	uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
 	uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
 	uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF); 
@@ -79,73 +85,131 @@ static void network_init() {
 			uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
 			puts("");
 		}
+	}
+	coap_receiver_init();
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void drivers_init() {
+	int i;
+	if(!already_inited) {
+		rest_init_engine();
+		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
+			PRINTF("%s: initializing driver\n", driver[i]->name);
+			driver[i]->init();
+		}
+		already_inited = 1;
 	}
 }
 
 /*---------------------------------------------------------------------------*/
 
-PROCESS_THREAD(server_process, ev, data) {
-	static int i,state;
+/* This function is the callback for COAP_BLOCKING_REQUEST() in order to 
+   handle responses. */
+
+static void client_chunk_handler(void *response) {
+	PRINTF("*** RESOURCE DIRECTORY REGISTERED!\n");
+	drivers_init();
+	registered = 1;
+}
+
+/*---------------------------------------------------------------------------*/
+
+static void sprint_ipaddr(uint8_t *buf, const uip_ipaddr_t *addr) {
+  if(addr == NULL || addr->u8 == NULL) {
+	sprintf(buf, "::");
+    return;
+  }
+  uint16_t a;
+  unsigned int i;
+  int f;
+  buf[0] = 0;
+  for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
+    a = (addr->u8[i] << 8) + addr->u8[i + 1];
+    if(a == 0 && f >= 0) {
+      if(f++ == 0) {
+        strcat(buf, "::");
+      }
+    } else {
+      if(f > 0) {
+        f = -1;
+      } else if(i > 0) {
+        strcat(buf, ":");
+      }
+      sprintf(buf+strlen(buf), "%x", a);
+    }
+  }
+}
+
+/*---------------------------------------------------------------------------*/
+
+PROCESS_THREAD(registration_process, ev, data) {
+	static int i;
+	static uip_ipaddr_t server_ipaddr;
+	static coap_packet_t request[1];
+	static uint8_t buf[256];
 	static struct etimer timer;
-	static uip_ipaddr_t ipaddr;
+	static const char* service_url = "register";
+
+	PROCESS_BEGIN();
+	PRINTF("Registration process started\n");
+	network_init();
+	SENSORS_ACTIVATE(button_sensor);
+	uip_ip6addr(&server_ipaddr, 0xaaaa, 0, 0, 0, 0xc30c, 0, 0, 1);
+	while(1) {
+		registered = 0;
+		PRINTF("*** REGISTERING ALL RESOURCES TO RESOURCE DIRECTORY\n");
+		sprint_ipaddr(buf, &ipaddr);
+		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++)
+			sprintf(buf+strlen(buf), "\n/%s\t%s\t%s", driver[i]->name, driver[i]->unit, driver[i]->type);
+		strcat(buf, "\n");
+		PRINTF("*** SENDING MESSAGE WITH PAYLOAD: %s\n", buf);
+		coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+		coap_set_header_uri_path(request, service_url);
+		coap_set_payload(request, buf, strlen(buf));
+		COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
+		PRINTF("*** EXITED\n");
+		if(registered) {
+			etimer_set(&timer, REGISTER_INTERVAL);
+			PROCESS_WAIT_EVENT_UNTIL((ev == sensors_event && data == &button_sensor) || etimer_expired(&timer));
+		}
+	}
+	PROCESS_END();
+}
+
+/*---------------------------------------------------------------------------*/
+
+PROCESS_THREAD(status_process, ev, data) {
+	static struct etimer timer;
+	static char led_period = 0;
 
 	PROCESS_BEGIN();
 
-	//network_init();
-	uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
-	uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-	uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF); 
-	puts("IPv6 addresses: ");
-	for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-		state = uip_ds6_if.addr_list[i].state;
-		if(uip_ds6_if.addr_list[i].isused &&
-			(state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-			uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
-			puts("");
-		}
-	}
-
-	rest_init_engine();
-
-	for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
-		PRINTF("%s: initializing driver\n", driver[i]->name);
-		driver[i]->init();
-	}
-
+  	PRINTF("Led status process started\n");
 	etimer_set(&timer, LED_TOGGLE_INTERVAL);
-  	PRINTF("CoAP observable event server started\n");
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
-		leds_toggle(LEDS_GREEN);
+		switch(led_period) {
+		case 0:
+		case 2:
+			leds_on(registered? LEDS_GREEN : LEDS_RED);
+			break;
+		case 1:
+		case 3:
+			if(registered) {
+				leds_on(LEDS_GREEN);
+				break;
+			}
+		default:
+			leds_off(LEDS_GREEN | LEDS_RED);
+		}
 		etimer_reset(&timer);
+		led_period = (led_period + 1) % 8;
 	}
   	PROCESS_END();
 }
 
 /*---------------------------------------------------------------------------*/
 
-PROCESS_THREAD(button_process, ev, data) {
-	static int i;
-	static struct etimer timer;
-	PROCESS_BEGIN();
-	SENSORS_ACTIVATE(button_sensor);
-	PRINTF("Button process started\n");
-	while(1) {
-		PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
-		PRINTF("*** FORCING DELIVERY OF ALL RESOURCESY\n");
-		leds_on(LEDS_RED);
-
-		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
-			PRINTF("%s: forcing notification\n", driver[i]->name);
-			driver[i]->notify();
-		}
-
-		etimer_set(&timer, CLOCK_SECOND >> 1);
-		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
-		leds_off(LEDS_RED);
-	}
-	PROCESS_END();
-}
-
-/*---------------------------------------------------------------------------*/
 

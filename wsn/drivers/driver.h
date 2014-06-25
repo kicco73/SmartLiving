@@ -3,8 +3,10 @@
 
 typedef struct Driver {
 	char* name;
+	char* description;
+	char* unit;
+	char* type;
 	void (*init)();
-  	void (*notify)();
 } *driver_t;
 
 #endif

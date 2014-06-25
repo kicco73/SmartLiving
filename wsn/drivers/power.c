@@ -12,12 +12,10 @@
 
 const struct sensors_sensor power_sensor;
 
-static int OFFSET = 100;
-static float SCALE_FACTOR=0.354;
+#define OFFSET 100
+#define SCALE_FACTOR 0.354
 
 PERIODIC_RESOURCE(power_resource, METHOD_GET, "power W", "title=\"power sensor resource\";rt=\"Text\";obs", 5*CLOCK_SECOND);
-
-
 
 /*---------------------------------------------------------------------------*/
 
@@ -73,11 +71,13 @@ void power_resource_handler(void* request, void* response, uint8_t *buffer, uint
 void power_resource_periodic_handler(resource_t *r) {
 	static int event_counter;
 	char buffer[16];
+	PRINTF("*** power_resource_periodic_handler(): called!\n");
 	read_power(buffer);
 	coap_packet_t notification[1];
 	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
+	PRINTF("*** power_resource_periodic_handler(): done!\n");
 }
 
 /*---------------------------------------------------------------------------*/
@@ -88,12 +88,14 @@ static void sensor_notify() {
 
 /*---------------------------------------------------------------------------*/
 
-SENSORS_SENSOR(power_sensor, "power sensor", sensor_value, sensor_configure, sensor_status);
+SENSORS_SENSOR(power_sensor, "power", sensor_value, sensor_configure, sensor_status);
 
 const struct Driver POWER_DRIVER = {
-	.name = "power sensor",
+	.name = "power",
+	.description = "power sensor",
+	.unit = "W",
+	.type = "sensor",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/

@@ -183,7 +183,7 @@ httpd_appcall(void *state)
   } else if(uip_connected()) {
     s = (struct httpd_state *)memb_alloc(&conns);
     if(!s) {
-      puts("Aborting connection - no memory");
+      //puts("Aborting connection - no memory");
       uip_abort();
       return;
       //webserver_log_file(&uip_conn->ripaddr, "reset (no memory block)");

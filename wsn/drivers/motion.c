@@ -28,12 +28,6 @@ static int sensor_value(int type) {
 
 /*---------------------------------------------------------------------------*/
 
-static void sensor_notify() {
-	// TODO
-}
-
-/*---------------------------------------------------------------------------*/
-
 static int sensor_status(int type) {
   return sky_sensors_status(INPUT_CHANNEL, type);
 }
@@ -64,23 +58,26 @@ void motion_resource_handler(void* request, void* response, uint8_t *buffer, uin
 void motion_resource_periodic_handler(resource_t *r) {
 	static int event_counter;
 	char buffer[16];
+	PRINTF("*** motion_resource_periodic_handler(): called!\n");
 	sprintf(buffer, "%d", 200*sensor_value(0));
 	coap_packet_t notification[1];
 	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
+	PRINTF("*** motion_resource_periodic_handler(): done\n");
 }
 
 
 /*---------------------------------------------------------------------------*/
 
-SENSORS_SENSOR(motion_sensor, "motion sensor", sensor_value, sensor_configure, sensor_status);
-
+SENSORS_SENSOR(motion_sensor, "motion", sensor_value, sensor_configure, sensor_status);
 
 const struct Driver MOTION_DRIVER = {
-	.name = "motion sensor",
+	.name = "motion",
+	.description = "motion sensor",
+	.unit = "on/off",
+	.type = "sensor",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/

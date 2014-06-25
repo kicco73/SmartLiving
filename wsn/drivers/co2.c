@@ -34,12 +34,6 @@ static int sensor_value(int type) {
 
 /*---------------------------------------------------------------------------*/
 
-static void sensor_notify() {
-	// TODO
-}
-
-/*---------------------------------------------------------------------------*/
-
 static int sensor_status(int type) {
   return sky_sensors_status(INPUT_CHANNEL, type);
 }
@@ -104,11 +98,12 @@ void co2_resource_periodic_handler(resource_t *r) {
 
 SENSORS_SENSOR(co2_sensor, "CO2 sensor", sensor_value, sensor_configure, sensor_status);
 
-
 const struct Driver CO2_DRIVER = {
-	.name = "CO2 sensor",
+	.name = "co2",
+	.description = "CO2 sensor",
+	.unit = "???",
+	.type = "sensor",
 	.init = sensor_init, 
-	.notify = sensor_notify
 };
 
 /*---------------------------------------------------------------------------*/
