@@ -6,21 +6,24 @@
 #include "dev/sky-sensors.h"
 #include "motion.h"
 
+#define INPUT_CHANNEL      (1 << INCH_0)
+#define INPUT_REFERENCE    SREF_1
+#define MOTION_MEM    ADC12MEM0
+
 const struct sensors_sensor motion_sensor;
 
+PERIODIC_RESOURCE(motion_resource, METHOD_GET, "motion", "title=\"motion sensor\";rt=\"Text\";obs", 5*CLOCK_SECOND);
 /*---------------------------------------------------------------------------*/
 
 static void sensor_init() {
-	// TODO
-	//SENSORS_ACTIVATE(power_sensor);
-	//rest_activate_periodic_resource(&periodic_resource_fan_resource);
+	SENSORS_ACTIVATE(motion_sensor);
+	rest_activate_periodic_resource(&periodic_resource_motion_resource);
 }
 
 /*---------------------------------------------------------------------------*/
 
 static int sensor_value(int type) {
-	// TODO
-	return 0;
+	return MOTION_MEM;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -32,15 +35,13 @@ static void sensor_notify() {
 /*---------------------------------------------------------------------------*/
 
 static int sensor_status(int type) {
-	// TODO
-  	return 0;
+  return sky_sensors_status(INPUT_CHANNEL, type);
 }
 
 /*---------------------------------------------------------------------------*/
 
 static int sensor_configure(int type, int c) {
-	// TODO
-	return 0;
+  return sky_sensors_configure(INPUT_CHANNEL, INPUT_REFERENCE, type, c);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -60,9 +61,21 @@ void motion_resource_handler(void* request, void* response, uint8_t *buffer, uin
 }
 
 /*---------------------------------------------------------------------------*/
+void motion_resource_periodic_handler(resource_t *r) {
+	static int event_counter;
+	char buffer[16];
+	sprintf(buffer, "%d", 200*sensor_value(0));
+	coap_packet_t notification[1];
+	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
+	coap_set_payload(notification, buffer, strlen(buffer)+1);
+	REST.notify_subscribers(r, event_counter++, notification);
+}
+
+
+/*---------------------------------------------------------------------------*/
 
 SENSORS_SENSOR(motion_sensor, "motion sensor", sensor_value, sensor_configure, sensor_status);
-PERIODIC_RESOURCE(motion_resource, METHOD_GET, "on/off", "title=\"motion sensor;rt=\"Text\";obs", 5*CLOCK_SECOND);
+
 
 const struct Driver MOTION_DRIVER = {
 	.name = "motion sensor",

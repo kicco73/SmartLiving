@@ -5,43 +5,24 @@
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
 #include "light.h"
+#include "dev/light-ziglet.h"
+#include "dev/i2cmaster.h"
 
-const struct sensors_sensor light_sensor;
+PERIODIC_RESOURCE(light_resource, METHOD_GET, "light", "title=\"light sensor\";rt=\"Text\";obs", 5*CLOCK_SECOND);
 
 /*---------------------------------------------------------------------------*/
 
 static void sensor_init() {
-	// TODO
-	//SENSORS_ACTIVATE(power_sensor);
-	//rest_activate_periodic_resource(&periodic_resource_fan_resource);
+
+  	light_ziglet_init();
+	rest_activate_periodic_resource(&periodic_resource_light_resource);
 }
 
 /*---------------------------------------------------------------------------*/
-
-static int sensor_value(int type) {
-	// TODO
-	return 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
 static void sensor_notify() {
 	// TODO
 }
 
-/*---------------------------------------------------------------------------*/
-
-static int sensor_status(int type) {
-	// TODO
-  	return 0;
-}
-
-/*---------------------------------------------------------------------------*/
-
-static int sensor_configure(int type, int c) {
-	// TODO
-	return 0;
-}
 
 /*---------------------------------------------------------------------------*/
 
@@ -49,7 +30,7 @@ void light_resource_handler(void* request, void* response, uint8_t *buffer, uint
 	int8_t length;
 	uint8_t method = REST.get_method_type(request);
 	if(method & METHOD_GET) {
-		sprintf(buffer, "%d", sensor_value(0));
+		sprintf(buffer, "%d", light_ziglet_read());
 		length = strlen(buffer)+1;
 		REST.set_header_content_type(response, REST.type.APPLICATION_JSON); 
 		REST.set_header_etag(response, (uint8_t *) &length, 1);
@@ -60,9 +41,20 @@ void light_resource_handler(void* request, void* response, uint8_t *buffer, uint
 }
 
 /*---------------------------------------------------------------------------*/
+void light_resource_periodic_handler(resource_t *r) {
+	static int event_counter;
+	char buffer[16];
+	sprintf(buffer, "%d", light_ziglet_read());
+	coap_packet_t notification[1];
+	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
+	coap_set_payload(notification, buffer, strlen(buffer)+1);
+	REST.notify_subscribers(r, event_counter++, notification);
+}
 
-SENSORS_SENSOR(light_sensor, "light sensor", sensor_value, sensor_configure, sensor_status);
-PERIODIC_RESOURCE(light_resource, METHOD_GET, "on/off", "title=\"light sensor;rt=\"Text\";obs", 5*CLOCK_SECOND);
+
+/*---------------------------------------------------------------------------*/
+
+
 
 const struct Driver LIGHT_DRIVER = {
 	.name = "light sensor",
