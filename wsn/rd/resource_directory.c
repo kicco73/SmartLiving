@@ -71,6 +71,8 @@
 // COAP_DEFAULT_PORT = 5683
 #define REMOTE_PORT	UIP_HTONS(COAP_DEFAULT_PORT)
 
+#define HTTP_ON_UPDATE 0
+
 #define MAX_NUM_RESOURCES 10
 
 #define DEBUG DEBUG_NONE
@@ -85,7 +87,7 @@ static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
 
 static coap_packet_t request[1];
-static process_event_t coap_put_event;
+static process_event_t put_event;
 static int num_res = 0;
 static char to_observe[MAX_NUM_RESOURCES];
 
@@ -100,7 +102,16 @@ struct resource {
 static struct resource *rd;
 
 PROCESS(border_router_process, "BR");
+PROCESS(webserver_nogui_process, "WS");
 PROCESS(coap_put_process, "COAP");
+#if HTTP_ON_UPDATE
+PROCESS(on_update_process, "HTTP");
+
+AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process,&coap_put_process,&on_update_process);
+#else
+AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
+#endif
+
 
 #if WEBSERVER==0
 /* No webserver */
@@ -165,6 +176,7 @@ static char *put_resource;
 static char *put_value;
 static char coap_success;
 
+/*---------------------------------------------------------------------------*/
 static int find_resource(char *name) {
 	int i;
 
@@ -176,24 +188,9 @@ static int find_resource(char *name) {
 	return -1;
 }
 
-// Handle CoAP PUT response
-static void client_put_handler(void *response) {
-	int i;
-  int status = ((coap_packet_t*)response)->code;
-
-	if(status == REST.status.OK || status == REST.status.CHANGED) {
-		i = find_resource(put_resource);
-		if(i != -1) {
-			strcpy(rd[i].v, put_value);
-			coap_success = 1;
-		}
-	} else {
-		coap_success = 0;
-	}
-}
-
 RESOURCE(register_resource, METHOD_PUT, "register", "title=\"Reg\";rt=\"Text\"");
 
+/*---------------------------------------------------------------------------*/
 static int insert_resource(uip_ipaddr_t *ip_addr, char *n, char *v, char *u, char *rt) {
 	int i, j; // i: place where to put the new resource, j: index of the possible resource already present
 
@@ -220,43 +217,37 @@ static int insert_resource(uip_ipaddr_t *ip_addr, char *n, char *v, char *u, cha
 	if(i != j) ++num_res;
 	return num_res;
 }
-
+/*---------------------------------------------------------------------------*/
 void register_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
 	uint8_t length;
-	uint8_t method = REST.get_method_type(request);
-	if(method & METHOD_PUT) {
-		static const uint8_t **chunk;
-		char *pch;
-		int len;
-		char n[16], v[16], u[16], rt[16];
-		
-		uip_ipaddr_t new_ip;
-		
-		REST.set_header_content_type(response, REST.type.TEXT_PLAIN); 
-		REST.set_header_etag(response, (uint8_t *) &length, 1);
-		len = coap_get_payload(request, &chunk);
+	static const uint8_t *chunk;
+	char *pch;
+	char n[16], v[16], u[16], rt[16];
+	
+	uip_ipaddr_t new_ip;
+	
+	REST.set_header_content_type(response, REST.type.TEXT_PLAIN); 
+	REST.set_header_etag(response, (uint8_t *) &length, 1);
+	coap_get_payload(request, &chunk);
 
-		pch = strtok((char*) chunk, "\n\t");
-		uiplib_ipaddrconv(pch, &new_ip);
+	pch = strtok((char*) chunk, "\n\t");
+	uiplib_ipaddrconv(pch, &new_ip);
 
-		for(pch = strtok(NULL, "\n\t"); pch != NULL; pch = strtok(NULL, "\n\t")) {
-			strcpy(n, pch);
-			strcpy(v, "0");
-			strcpy(u, pch = strtok(NULL, "\n\t"));
-			strcpy(rt, pch = strtok(NULL, "\n\t"));
+	for(pch = strtok(NULL, "\n\t"); pch != NULL; pch = strtok(NULL, "\n\t")) {
+		strcpy(n, pch);
+		strcpy(v, "0");
+		strcpy(u, pch = strtok(NULL, "\n\t"));
+		strcpy(rt, pch = strtok(NULL, "\n\t"));
 
-			if(insert_resource(&new_ip, n, v, u, rt) == -1) {
-				// RD full!
-				REST.set_response_status(response, REST.status.SERVICE_UNAVAILABLE);
-				return;
-			}
+		if(insert_resource(&new_ip, n, v, u, rt) == -1) {
+			// RD full!
+			REST.set_response_status(response, REST.status.SERVICE_UNAVAILABLE);
+			return;
 		}
-		REST.set_response_status(response, REST.status.OK);
-	} else
-		REST.set_response_status(response, REST.status.BAD_REQUEST);
+	}
+	REST.set_response_status(response, REST.status.OK);
 }
-
-PROCESS(webserver_nogui_process, "Ws");
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(webserver_nogui_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -270,18 +261,15 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
   
   PROCESS_END();
 }
-
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
-
+/*---------------------------------------------------------------------------*/
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
 {
 	PSOCK_BEGIN(&s->sout);
 
   static int i;
-	static coap_packet_t request[1];
   char *pch;
-	coap_put_event = process_alloc_event();
+	put_event = process_alloc_event();
 
 	if(s->method == GET) {
 
@@ -312,7 +300,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 			if((pch = strtok(NULL, "?")) != NULL && (pch = strtok(pch, "=")) != NULL && strcmp(pch, "v") == 0 && (pch = strtok(NULL, "=")) != NULL) {
 				strcpy(put_resource, rd[i].n);
 				strcpy(put_value, pch);
-				process_post(&coap_put_process, coap_put_event, NULL);
+				process_post(&coap_put_process, put_event, NULL);
 				s->http_header = HTTP_HEADER_200;
 				strcpy(s->http_output_payload, "{}");
 			} else {
@@ -332,7 +320,7 @@ httpd_simple_get_script(const char *name)
 {
   return generate_routes;
 }
-
+/*---------------------------------------------------------------------------*/
 #endif /* WEBSERVER */
 
 void
@@ -362,19 +350,17 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 void client_observing_handler(void *response) {
 	int i, len;
 	char buf[16];
-  const uint8_t *chunk;
+  const char *chunk;
 
 	i = coap_get_header_uri_path(response, &chunk);
 	len = sizeof(buf)-1;
-	buf[len] = 0;
+	memset(buf, 0, sizeof(buf)*sizeof(char));
 	strncpy(buf, chunk, i<len ? i : len);
 	i = find_resource(buf);
 
-  len = coap_get_payload(response, &chunk);
+  len = coap_get_payload(response, (const uint8_t **) &chunk);
 	strncpy(rd[i].v, chunk, len);
 }
-
-/*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
@@ -446,7 +432,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 
 		for(i=0; i < num_res; i++) {
 			if(to_observe[i]) {
-				coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, rd[i].n, client_observing_handler, NULL);
+				coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, rd[i].n, (notification_callback_t) client_observing_handler, NULL);
 				puts("New obs");
 				to_observe[i] = 0;
 			}
@@ -454,6 +440,22 @@ PROCESS_THREAD(border_router_process, ev, data)
   }
 
   PROCESS_END();
+}
+
+/*---------------------------------------------------------------------------*/
+static void client_put_handler(void *response) {
+	int i;
+  int status = ((coap_packet_t*)response)->code;
+
+	if(status == REST.status.OK || status == REST.status.CHANGED) {
+		i = find_resource(put_resource);
+		if(i != -1) {
+			strcpy(rd[i].v, put_value);
+			coap_success = 1;
+		}
+	} else {
+		coap_success = 0;
+	}
 }
 
 /*---------------------------------------------------------------------------*/
@@ -466,24 +468,29 @@ PROCESS_THREAD(coap_put_process, ev, data)
 	int i;
 	
 	while(1) {
-		PROCESS_WAIT_EVENT_UNTIL(ev == coap_put_event);
+		PROCESS_WAIT_EVENT_UNTIL(ev == put_event);
 		coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 		coap_set_header_uri_path(request, put_resource+1);
 		sprintf(buf, "v=%s", put_value);
 		coap_set_payload(request, buf, strlen(buf));
 		i = find_resource(put_resource);
 		COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
+
+		#if HTTP_ON_UPDATE
+		//process_post(&on_update_process, put_event, NULL);
+		#endif
 	}
 
 	PROCESS_END();
 }
 
-/*static void handle_request(struct psock *ps, char *resource, char *value) {
+#if HTTP_ON_UPDATE
+void handle_request(struct psock *ps) {
 		PSOCK_BEGIN(ps);
 
-		static char buf[256];
+		static char buf[128];
 		char buf2[128];
-		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]\n", resource, value);
+		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]\n", put_resource, put_value);
 
 		snprintf(buf, sizeof(buf)-1, "POST /resources/onUpdate HTTP/1.0\nContent-Length: %d\nContent-type: application/json\n\n%s", strlen(buf2), buf2);
 		SEND_STRING(ps, buf);
@@ -493,7 +500,7 @@ PROCESS_THREAD(coap_put_process, ev, data)
 		PSOCK_END(ps);
 }
 
-PROCESS_THREAD(button_on_update_process, ev, data)
+PROCESS_THREAD(on_update_process, ev, data)
 {
 	PROCESS_BEGIN();
 
@@ -502,15 +509,14 @@ PROCESS_THREAD(button_on_update_process, ev, data)
 	static uip_ip6addr_t webapp;
 	uip_ip6addr(&webapp, 0xaaaa,0,0,0,0,0,0,1);
 
-  SENSORS_ACTIVATE(button_sensor);
   while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
+    PROCESS_WAIT_EVENT_UNTIL(ev == put_event);
 		
 		tcp_connect(&webapp, UIP_HTONS(80), NULL);
 		
 		PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
 		if(uip_connected()) {
-		  PSOCK_INIT(&ps, buffer, sizeof(buffer));
+		  PSOCK_INIT(&ps, (uint8_t *) buffer, sizeof(buffer));
 			while(!(uip_aborted() || uip_closed() || uip_timedout())) {
 				PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
 				handle_request(&ps);
@@ -518,8 +524,8 @@ PROCESS_THREAD(button_on_update_process, ev, data)
     } 
   }
   PROCESS_END();
-}*/
-
+}
+#endif
 
 /*---------------------------------------------------------------------------*/
 #if 0
