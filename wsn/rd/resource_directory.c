@@ -94,7 +94,7 @@ struct resource {
 	char n[8];
 	char v[8];
 	char u[8];
-	char rt[8];
+	char rt[16];
 };
  
 static struct resource *rd;
@@ -225,7 +225,7 @@ void register_resource_handler(void* request, void* response, uint8_t *buffer, u
 	uint8_t length;
 	uint8_t method = REST.get_method_type(request);
 	if(method & METHOD_PUT) {
-		const uint8_t **chunk;
+		static const uint8_t **chunk;
 		char *pch;
 		int len;
 		char n[16], v[16], u[16], rt[16];
@@ -234,7 +234,7 @@ void register_resource_handler(void* request, void* response, uint8_t *buffer, u
 		
 		REST.set_header_content_type(response, REST.type.TEXT_PLAIN); 
 		REST.set_header_etag(response, (uint8_t *) &length, 1);
-		len = coap_get_payload(request, chunk);
+		len = coap_get_payload(request, &chunk);
 
 		pch = strtok((char*) chunk, "\n\t");
 		uiplib_ipaddrconv(pch, &new_ip);
@@ -276,6 +276,8 @@ AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
 {
+	PSOCK_BEGIN(&s->sout);
+
   static int i;
 	static coap_packet_t request[1];
   char *pch;
@@ -284,11 +286,9 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 	if(s->method == GET) {
 
 		if(!strncmp(s->filename, "/" ,2)) { // GET all resources
-			strcpy(s->http_output_payload,"[");	  
+			strcpy(s->http_output_payload,"[");
 			for(i=0;i<num_res;i++) {
-				printf("Res %d\n", i);
-				sprintf(s->http_output_payload+strlen(s->http_output_payload),"{\"n\":\"%s\",\"v\":%d,\"u\":\"%s\",\"rt\":\"%s\"}%c",rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<num_res?',':'\0');
-				puts("OK");
+				sprintf(s->http_output_payload+strlen(s->http_output_payload),"{\"n\":\"%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<num_res?',':'\0');
 			}
 			sprintf(s->http_output_payload+strlen(s->http_output_payload),"]");
 		
@@ -296,7 +296,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 		} else { // GET a single resource
 			i = find_resource(s->filename);
 			if(i != -1) {
-				sprintf(s->http_output_payload,"{\"n\":\"%s\",\"v\":%d}",rd[i].n,rd[i].v);
+				sprintf(s->http_output_payload,"{\"n\":\"%s\",\"v\":%s}",rd[i].n,rd[i].v);
 			} else {
 				s->http_header = HTTP_HEADER_404;
 				strcpy(s->http_output_payload, "{}");
@@ -325,7 +325,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 			strcpy(s->http_output_payload, "{}");
 		}
 	}
-	return 0;
+	PSOCK_END(&s->sout);
 }
 /*---------------------------------------------------------------------------*/
 httpd_simple_script_t
@@ -448,7 +448,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 		for(i=0; i < num_res; i++) {
 			if(to_observe[i]) {
 				coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, rd[i].n, client_observing_handler, NULL);
-				puts("Obs res");
+				puts("New obs");
 				to_observe[i] = 0;
 			}
 		}
@@ -470,7 +470,7 @@ PROCESS_THREAD(coap_put_process, ev, data)
 		PROCESS_WAIT_EVENT_UNTIL(ev == coap_put_event);
 		coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 		coap_set_header_uri_path(request, put_resource+1);
-		sprintf(buf, "v=%d", put_value);
+		sprintf(buf, "v=%s", put_value);
 		coap_set_payload(request, buf, strlen(buf));
 		i = find_resource(put_resource);
 		COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
