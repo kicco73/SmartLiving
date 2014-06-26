@@ -45,7 +45,7 @@ void fan_resource_handler(void* request, void* response, uint8_t *buffer, uint16
 
 /*---------------------------------------------------------------------------*/
 
-const struct Driver FAN_DRIVER = {
+struct Driver FAN_DRIVER = {
 	.name = "fan",
 	.description = "fan relay",
 	.unit = "on/off",

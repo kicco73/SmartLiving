@@ -3,6 +3,6 @@
 
 #include "drivers/driver.h"
 
-extern const struct Driver CO2_DRIVER;
+extern struct Driver CO2_DRIVER;
 
 #endif /* __CO2_H__ */

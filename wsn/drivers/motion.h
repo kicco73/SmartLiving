@@ -3,6 +3,6 @@
 
 #include "drivers/driver.h"
 
-extern const struct Driver MOTION_DRIVER;
+extern struct Driver MOTION_DRIVER;
 
 #endif /* __MOTION_H__ */

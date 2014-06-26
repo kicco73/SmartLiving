@@ -78,7 +78,7 @@ void sound_resource_periodic_handler(resource_t *r) {
 SENSORS_SENSOR(sound_sensor, "sound sensor", sensor_value, sensor_configure, sensor_status);
 
 
-const struct Driver SOUND_DRIVER = {
+struct Driver SOUND_DRIVER = {
 	.name = "sound",
 	.description = "sound sensor",
 	.unit = "dB",

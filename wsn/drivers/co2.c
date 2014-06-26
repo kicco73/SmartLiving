@@ -98,7 +98,7 @@ void co2_resource_periodic_handler(resource_t *r) {
 
 SENSORS_SENSOR(co2_sensor, "CO2 sensor", sensor_value, sensor_configure, sensor_status);
 
-const struct Driver CO2_DRIVER = {
+struct Driver CO2_DRIVER = {
 	.name = "co2",
 	.description = "CO2 sensor",
 	.unit = "???",
