@@ -46,7 +46,7 @@ static int sensor_configure(int type, int c) {
 
 static void read_power(char *buf){
 
- if(sensor_value(0) > OFFSET) sprintf(buf,"%d%d", (int)((sensor_value(0)-OFFSET)), (int)((sensor_value(0)-OFFSET))*100);
+ if(sensor_value(0) > OFFSET) sprintf(buf,"%d%d", (int)((sensor_value(0)-OFFSET)), (int) ((sensor_value(0)-OFFSET)-(int)(sensor_value(0)-OFFSET))*100);
  	  
 }
 

@@ -36,6 +36,7 @@ void fan_resource_handler(void* request, void* response, uint8_t *buffer, uint16
 		const char *tmpbuf;
 		REST.get_post_variable(request, "v", &tmpbuf);
 		value = atoi(tmpbuf);
+		printf("%d", value);
 		if (value) relay_on();
 		else relay_off();
 		REST.set_response_status(response, REST.status.CHANGED);

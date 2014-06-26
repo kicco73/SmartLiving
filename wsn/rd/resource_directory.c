@@ -291,6 +291,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 				puts("OK");
 			}
 			sprintf(s->http_output_payload+strlen(s->http_output_payload),"]");
+		
 
 		} else { // GET a single resource
 			i = find_resource(s->filename);
