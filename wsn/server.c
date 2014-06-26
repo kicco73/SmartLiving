@@ -157,8 +157,9 @@ PROCESS_THREAD(registration_process, ev, data) {
 	PROCESS_BEGIN();
 	PRINTF("Registration process started\n");
 	network_init();
-	SENSORS_ACTIVATE(button_sensor);
 	uip_ip6addr(&server_ipaddr, 0xaaaa, 0, 0, 0, 0xc30c, 0, 0, 1);
+	SENSORS_ACTIVATE(button_sensor);
+	ledoff_event = process_alloc_event();
 	etimer_set(&timer, BOOT_WAIT_INTERVAL);
 	PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 	while(1) {
@@ -175,6 +176,7 @@ PROCESS_THREAD(registration_process, ev, data) {
 		coap_set_payload(request, buf, strlen(buf));
 		COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
 		PRINTF("*** EXITED\n");
+		process_post(&status_process, ledoff_event, NULL);
 		if(registered) {
 			etimer_set(&timer, REGISTER_INTERVAL);
 			PROCESS_WAIT_EVENT_UNTIL((ev == sensors_event && data == &button_sensor) || etimer_expired(&timer));
@@ -195,7 +197,10 @@ PROCESS_THREAD(status_process, ev, data) {
 	etimer_set(&timer, LED_TOGGLE_INTERVAL);
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer) || ev == ledoff_event);
-		led_period = ev == ledoff_event? 0 : (led_period + 1) % 8;
+		if(ev == ledoff_event) {
+			led_period = 0;
+			leds_off(LEDS_ALL);
+		}
 		switch(led_period) {
 		case 0:
 		case 2:
@@ -211,6 +216,7 @@ PROCESS_THREAD(status_process, ev, data) {
 			leds_off(LEDS_GREEN | LEDS_RED);
 		}
 		etimer_reset(&timer);
+		led_period = (led_period + 1) % 8;
 	}
   	PROCESS_END();
 }
