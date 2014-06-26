@@ -68,6 +68,7 @@ AUTOSTART_PROCESSES(&status_process, &registration_process);
 
 static char registered = 0;
 static char already_inited = 0;
+static process_event_t ledoff_event;
 
 /*---------------------------------------------------------------------------*/
 
@@ -162,6 +163,7 @@ PROCESS_THREAD(registration_process, ev, data) {
 	PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 	while(1) {
 		registered = 0;
+		process_post(&status_process, ledoff_event, NULL);
 		PRINTF("*** REGISTERING ALL RESOURCES TO RESOURCE DIRECTORY\n");
 		sprint_ipaddr(buf, &ipaddr);
 		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++)
@@ -192,7 +194,8 @@ PROCESS_THREAD(status_process, ev, data) {
   	PRINTF("Led status process started\n");
 	etimer_set(&timer, LED_TOGGLE_INTERVAL);
 	while(1) {
-		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer) || ev == ledoff_event);
+		led_period = ev == ledoff_event? 0 : (led_period + 1) % 8;
 		switch(led_period) {
 		case 0:
 		case 2:
@@ -208,7 +211,6 @@ PROCESS_THREAD(status_process, ev, data) {
 			leds_off(LEDS_GREEN | LEDS_RED);
 		}
 		etimer_reset(&timer);
-		led_period = (led_period + 1) % 8;
 	}
   	PROCESS_END();
 }
