@@ -153,6 +153,7 @@ PROCESS_THREAD(registration_process, ev, data) {
 	static char buf[256];
 	static struct etimer timer;
 	static const char* service_url = "register";
+	coap_observer_t *obs;
 
 	PROCESS_BEGIN();
 	PRINTF("Registration process started\n");
@@ -164,7 +165,10 @@ PROCESS_THREAD(registration_process, ev, data) {
 	PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 	while(1) {
 		registered = 0;
-		process_post(&status_process, ledoff_event, NULL);
+		//process_post(&status_process, ledoff_event, NULL);
+		PRINTF("*** DEREGISTERING ALL OBSERVERS\n");
+		while((obs = (coap_observer_t*)list_head(coap_get_observers())))
+			coap_remove_observer(obs);
 		PRINTF("*** REGISTERING ALL RESOURCES TO RESOURCE DIRECTORY\n");
 		sprint_ipaddr(buf, &ipaddr);
 		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++)
@@ -176,7 +180,7 @@ PROCESS_THREAD(registration_process, ev, data) {
 		coap_set_payload(request, buf, strlen(buf));
 		COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
 		PRINTF("*** EXITED\n");
-		process_post(&status_process, ledoff_event, NULL);
+		//process_post(&status_process, ledoff_event, NULL);
 		if(registered) {
 			etimer_set(&timer, REGISTER_INTERVAL);
 			PROCESS_WAIT_EVENT_UNTIL((ev == sensors_event && data == &button_sensor) || etimer_expired(&timer));
