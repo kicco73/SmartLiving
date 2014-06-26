@@ -72,7 +72,7 @@ void motion_resource_periodic_handler(resource_t *r) {
 
 SENSORS_SENSOR(motion_sensor, "motion", sensor_value, sensor_configure, sensor_status);
 
-const struct Driver MOTION_DRIVER = {
+struct Driver MOTION_DRIVER = {
 	.name = "motion",
 	.description = "motion sensor",
 	.unit = "on/off",

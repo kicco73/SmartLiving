@@ -3,6 +3,6 @@
 
 #include "drivers/driver.h"
 
-extern const struct Driver SOUND_DRIVER;
+extern struct Driver SOUND_DRIVER;
 
 #endif /* __SOUND_H__ */

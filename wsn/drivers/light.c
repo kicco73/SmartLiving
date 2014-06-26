@@ -51,7 +51,7 @@ void light_resource_periodic_handler(resource_t *r) {
 
 /*---------------------------------------------------------------------------*/
 
-const struct Driver LIGHT_DRIVER = {
+struct Driver LIGHT_DRIVER = {
 	.name = "light",
 	.description = "light sensor",
 	.unit = "lux",

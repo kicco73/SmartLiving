@@ -111,7 +111,7 @@ void co_resource_periodic_handler(resource_t *r) {
 
 SENSORS_SENSOR(co_sensor, "CO sensor", sensor_value, sensor_configure, sensor_status);
 
-const struct Driver CO_DRIVER = {
+struct Driver CO_DRIVER = {
 	.name = "co",
 	.description = "CO sensor",
 	.unit = "???",

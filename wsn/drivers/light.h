@@ -3,6 +3,6 @@
 
 #include "drivers/driver.h"
 
-extern const struct Driver LIGHT_DRIVER;
+extern struct Driver LIGHT_DRIVER;
 
 #endif /* __LIGHT_H__ */

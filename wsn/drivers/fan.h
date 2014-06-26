@@ -3,6 +3,6 @@
 
 #include "drivers/driver.h"
 
-extern const struct Driver FAN_DRIVER;
+extern struct Driver FAN_DRIVER;
 
 #endif /* __FAN_H__ */

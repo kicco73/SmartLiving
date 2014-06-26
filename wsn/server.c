@@ -58,6 +58,7 @@ static driver_t driver[] = {
 
 #define LED_TOGGLE_INTERVAL (CLOCK_SECOND >> 3)
 #define REGISTER_INTERVAL (CLOCK_SECOND << 7)
+#define BOOT_WAIT_INTERVAL (CLOCK_SECOND * 3)
 
 /*---------------------------------------------------------------------------*/
 
@@ -116,7 +117,7 @@ static void client_chunk_handler(void *response) {
 
 /*---------------------------------------------------------------------------*/
 
-static void sprint_ipaddr(uint8_t *buf, const uip_ipaddr_t *addr) {
+static void sprint_ipaddr(char *buf, const uip_ipaddr_t *addr) {
   if(addr == NULL || addr->u8 == NULL) {
 	sprintf(buf, "::");
     return;
@@ -135,7 +136,7 @@ static void sprint_ipaddr(uint8_t *buf, const uip_ipaddr_t *addr) {
       if(f > 0) {
         f = -1;
       } else if(i > 0) {
-        strcat(buf, ":");
+        strcat((char*)buf, ":");
       }
       sprintf(buf+strlen(buf), "%x", a);
     }
@@ -148,7 +149,7 @@ PROCESS_THREAD(registration_process, ev, data) {
 	static int i;
 	static uip_ipaddr_t server_ipaddr;
 	static coap_packet_t request[1];
-	static uint8_t buf[256];
+	static char buf[256];
 	static struct etimer timer;
 	static const char* service_url = "register";
 
@@ -157,6 +158,8 @@ PROCESS_THREAD(registration_process, ev, data) {
 	network_init();
 	SENSORS_ACTIVATE(button_sensor);
 	uip_ip6addr(&server_ipaddr, 0xaaaa, 0, 0, 0, 0xc30c, 0, 0, 1);
+	etimer_set(&timer, BOOT_WAIT_INTERVAL);
+	PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 	while(1) {
 		registered = 0;
 		PRINTF("*** REGISTERING ALL RESOURCES TO RESOURCE DIRECTORY\n");
