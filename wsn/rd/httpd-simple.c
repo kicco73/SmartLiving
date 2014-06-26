@@ -143,7 +143,7 @@ PT_THREAD(handle_input(struct httpd_state *s))
     strncpy(s->filename, s->inputbuf, sizeof(s->filename));
 #endif /* URLCONV */
 
-  webserver_log_file(&uip_conn->ripaddr, s->filename);
+  //webserver_log_file(&uip_conn->ripaddr, s->filename);
 
   s->state = STATE_OUTPUT;
 
