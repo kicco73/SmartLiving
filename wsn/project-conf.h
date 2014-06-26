@@ -20,8 +20,8 @@
 #define REST_MAX_CHUNK_SIZE    256
 #undef COAP_MAX_OPEN_TRANSACTIONS
 #define COAP_MAX_OPEN_TRANSACTIONS   4
-#undef COAP_MAX_OBSERVERS
-#define COAP_MAX_OBSERVERS 1
+//#undef COAP_MAX_OBSERVERS
+//#define COAP_MAX_OBSERVERS 1
 
 /* Save some memory for the sky platform. */
 #undef NBR_TABLE_CONF_MAX_NEIGHBORS
