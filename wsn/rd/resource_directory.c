@@ -277,10 +277,7 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
   PROCESS_END();
 }
 
-// TODO: to remove
-PROCESS(button_coap_process, "COAP CLIENT");
-
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process,&button_coap_process);
+AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
@@ -327,7 +324,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 				coap_set_header_uri_path(request, put_resource+1);
 				sprintf(buf, "v=%s", put_value);
 				coap_set_header_uri_query(request, buf);
-				//COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
+				COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
 				s->http_header = coap_success ? HTTP_HEADER_200 : HTTP_HEADER_502;
 				sprintf(s->http_output_payload, "{}");
 			} else {
@@ -456,9 +453,8 @@ PROCESS_THREAD(border_router_process, ev, data)
 
 		for(i=0; i < num_res; i++) {
 			if(to_observe[i]) {
-				puts("Init new observing");
 				coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, rd[i].n, client_observing_handler, NULL);
-				puts("Observed");
+				puts("+ Observing resource");
 				to_observe[i] = 0;
 			}
 		}
@@ -467,32 +463,14 @@ PROCESS_THREAD(border_router_process, ev, data)
   PROCESS_END();
 }
 
-PROCESS_THREAD(button_coap_process, ev, data) {
-	PROCESS_BEGIN();
-
-	static uip_ipaddr_t server_ipaddr;
-	static const char* service_url = "alarm";
-	uip_ip6addr(&server_ipaddr, 0xaaaa, 0, 0, 0, 0xc30c, 0, 0, 2);
-
-	printf("Button thread started\n");
-	SENSORS_ACTIVATE(button_sensor);
-	while(1) {
-	  PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
-    printf("MI STO REGISTRANDO!\n");
-		coap_obs_request_registration(&server_ipaddr, REMOTE_PORT, service_url, client_observing_handler, NULL);
-    printf("REGISTRATO!\n");
-	}
-
-	PROCESS_END();
-}
-
 /*---------------------------------------------------------------------------*/
 
-/*static void handle_request(struct psock *ps) {
+/*static void handle_request(struct psock *ps, char *resource, char *value) {
 		PSOCK_BEGIN(ps);
 
 		static char buf[256];
-		char buf2[] = "[{\"n\":\"/light\",\"v\":0.75}]\n";
+		char buf2[128];
+		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]\n", resource, value);
 
 		snprintf(buf, sizeof(buf)-1, "POST /resources/onUpdate HTTP/1.0\nContent-Length: %d\nContent-type: application/json\n\n%s", strlen(buf2), buf2);
 		SEND_STRING(ps, buf);
