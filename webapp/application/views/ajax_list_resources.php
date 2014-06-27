@@ -44,7 +44,7 @@
 
 $(document).ready(function() {
 	$(".new .switch").click(resource.ajaxSwitchToggle);
-	$(".new .dimmer").slider({min: 0, max: 1, step:0.05,  change: resource.ajaxDimmerChange}).each(function() {
+	$(".new .dimmer").slider({min: 0, max: 100, step:1,  change: resource.ajaxDimmerChange}).each(function() {
 		$(this).slider("value", $(this).attr("data"));
 	});
 	$(".new .dimmer a").focus(observe.pause).blur(observe.run);
