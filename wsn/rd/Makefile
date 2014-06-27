@@ -20,7 +20,7 @@ APPS += er-coap-13
 APPS += erbium
 
 #linker optimizations
-SMALL=1
+#SMALL=1
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 PROJECT_SOURCEFILES += slip-bridge.c

@@ -68,6 +68,9 @@
 #define WEBSERVER_CONF_CFS_CONNS 2
 #endif
 
+#ifdef ENERGEST_CONF_ON
+#undef ENERGEST_CONF_ON
+#endif
 #define ENERGEST_CONF_ON 0
 
 #endif /* __PROJECT_ROUTER_CONF_H__ */
