@@ -59,6 +59,7 @@ static driver_t driver[] = {
 #define LED_TOGGLE_INTERVAL (CLOCK_SECOND >> 3)
 #define REGISTER_INTERVAL (CLOCK_SECOND << 7)
 #define BOOT_WAIT_INTERVAL (CLOCK_SECOND * 3)
+#define BOGUS_WAIT_INTERVAL (CLOCK_SECOND >> 7)
 
 /*---------------------------------------------------------------------------*/
 
@@ -180,6 +181,9 @@ PROCESS_THREAD(registration_process, ev, data) {
 		coap_set_payload(request, buf, strlen(buf));
 		COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
 		PRINTF("*** EXITED\n");
+		// allow registered variable to be set
+		etimer_set(&timer, BOGUS_WAIT_INTERVAL);
+		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 		//process_post(&status_process, ledoff_event, NULL);
 		if(registered) {
 			etimer_set(&timer, REGISTER_INTERVAL);
