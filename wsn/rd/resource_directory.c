@@ -71,7 +71,7 @@
 // COAP_DEFAULT_PORT = 5683
 #define REMOTE_PORT	UIP_HTONS(COAP_DEFAULT_PORT)
 
-#define HTTP_ON_UPDATE 0
+#define HTTP_ON_UPDATE 1
 
 #define MAX_NUM_RESOURCES 10
 
@@ -348,7 +348,7 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 /*---------------------------------------------------------------------------*/
 
 void client_observing_handler(void *response) {
-	int i, len;
+	static int i, len;
 	char buf[16];
   const char *chunk;
 
@@ -360,6 +360,10 @@ void client_observing_handler(void *response) {
 
   len = coap_get_payload(response, (const uint8_t **) &chunk);
 	strncpy(rd[i].v, chunk, len);
+
+#if HTTP_ON_UPDATE
+	process_post(&on_update_process, put_event, &i);
+#endif
 }
 
 /*---------------------------------------------------------------------------*/
@@ -475,22 +479,18 @@ PROCESS_THREAD(coap_put_process, ev, data)
 		coap_set_payload(request, buf, strlen(buf));
 		i = find_resource(put_resource);
 		COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
-
-		#if HTTP_ON_UPDATE
-		//process_post(&on_update_process, put_event, NULL);
-		#endif
 	}
 
 	PROCESS_END();
 }
 
 #if HTTP_ON_UPDATE
-void handle_request(struct psock *ps) {
+void handle_request(struct psock *ps, int *i) {
 		PSOCK_BEGIN(ps);
 
 		static char buf[128];
 		char buf2[128];
-		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]\n", put_resource, put_value);
+		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]\n", rd[*i].n, rd[*i].v);
 
 		snprintf(buf, sizeof(buf)-1, "POST /resources/onUpdate HTTP/1.0\nContent-Length: %d\nContent-type: application/json\n\n%s", strlen(buf2), buf2);
 		SEND_STRING(ps, buf);
@@ -519,7 +519,7 @@ PROCESS_THREAD(on_update_process, ev, data)
 		  PSOCK_INIT(&ps, (uint8_t *) buffer, sizeof(buffer));
 			while(!(uip_aborted() || uip_closed() || uip_timedout())) {
 				PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
-				handle_request(&ps);
+				handle_request(&ps, data);
 			}
     } 
   }
