@@ -96,7 +96,7 @@ struct resource {
 	char n[8];
 	char v[8];
 	char u[8];
-	char rt[16];
+	char rt[8];
 };
  
 static struct resource *rd;
@@ -172,8 +172,8 @@ static driver_t driver[] = {
 #endif
 };
 #endif
-static char *put_resource;
-static char *put_value;
+static int put_resource_idx;
+static char put_value[16];
 static char coap_success;
 
 /*---------------------------------------------------------------------------*/
@@ -205,6 +205,7 @@ static int insert_resource(uip_ipaddr_t *ip_addr, char *n, char *v, char *u, cha
 	}
 
 	uip_ipaddr_copy(&(rd[i].address), ip_addr);
+
 	strcpy(rd[i].n, n);
 	if(i != j) {
 		strcpy(rd[i].v, v); // change the value only if new resource
@@ -296,11 +297,13 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 		pch = strtok(s->filename, "?");
 
 		// First find the resource
-		i = find_resource(s->filename);
+		i = find_resource(pch);
+		printf("PUT: resource: %s, %d\n", pch, i);
 
 		if(i != -1) {
 			if((pch = strtok(NULL, "?")) != NULL && (pch = strtok(pch, "=")) != NULL && strcmp(pch, "v") == 0 && (pch = strtok(NULL, "=")) != NULL) {
-				strcpy(put_resource, rd[i].n);
+				printf("n: %s, v: %s\n", rd[i].n, pch);
+				put_resource_idx = i;
 				strcpy(put_value, pch);
 				process_post(&coap_put_process, put_event, NULL);
 				s->http_header = HTTP_HEADER_200;
@@ -454,11 +457,8 @@ static void client_put_handler(void *response) {
   int status = ((coap_packet_t*)response)->code;
 
 	if(status == REST.status.OK || status == REST.status.CHANGED) {
-		i = find_resource(put_resource);
-		if(i != -1) {
-			strcpy(rd[i].v, put_value);
-			coap_success = 1;
-		}
+		strcpy(rd[put_resource_idx].v, put_value);
+		coap_success = 1;
 	} else {
 		coap_success = 0;
 	}
@@ -470,16 +470,21 @@ PROCESS_THREAD(coap_put_process, ev, data)
 {
 	PROCESS_BEGIN();
 
-	char buf[16];
-	int i;
+	static char buf[16];
+	static int i;
 	
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(ev == put_event);
 		coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-		coap_set_header_uri_path(request, put_resource+1);
+		coap_set_header_uri_path(request, rd[put_resource_idx].n+1);
 		sprintf(buf, "v=%s", put_value);
 		coap_set_payload(request, buf, strlen(buf));
-		i = find_resource(put_resource);
+		puts("address:");
+		uip_debug_ipaddr_print(&(rd[i].address));
+		puts("");
+		printf("i: %d\n", i);
+		puts(rd[put_resource_idx].n+1);
+		puts(buf);
 		COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
 	}
 
