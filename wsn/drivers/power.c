@@ -13,10 +13,10 @@
 
 const struct sensors_sensor power_sensor;
 
-#define OFFSET 100
-#define SCALE_FACTOR 0.354
+#define OFFSET 40
+#define SCALE_FACTOR 0.250
 
-PERIODIC_RESOURCE(power_resource, METHOD_GET, "power W", "title=\"power sensor resource\";rt=\"Text\";obs", 5*CLOCK_SECOND);
+PERIODIC_RESOURCE(power_resource, METHOD_GET, "power", "title=\"power sensor resource\";rt=\"Text\";obs", 5*CLOCK_SECOND);
 
 /*---------------------------------------------------------------------------*/
 
@@ -47,8 +47,10 @@ static int sensor_configure(int type, int c) {
 
 static void read_power(char *buf){
 
- if(sensor_value(0) > OFFSET) sprintf(buf,"%d%d", (int)((sensor_value(0)-OFFSET)), (int) ((sensor_value(0)-OFFSET)-(int)(sensor_value(0)-OFFSET))*100);
- 	  
+//if(sensor_value(0) > OFFSET) sprintf(buf,"%d.%d", (int)((sensor_value(0)-OFFSET))*SCALE_FACTOR, (int) ((sensor_value(0)-OFFSET)*SCALE_FACTOR-(int)((sensor_value(0)-OFFSET)*SCALE_FACTOR)*100));
+
+if(sensor_value(0) > OFFSET) sprintf(buf,"%d.%d", (int)((sensor_value(0)-OFFSET)*SCALE_FACTOR), (int) ((sensor_value(0)-OFFSET)*SCALE_FACTOR-(int)((sensor_value(0)-OFFSET)*SCALE_FACTOR)*100));
+
 }
 
 /*---------------------------------------------------------------------------*/

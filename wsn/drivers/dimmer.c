@@ -45,7 +45,7 @@ static void sensor_init() {
 
 /*---------------------------------------------------------------------------*/
 
-static int sensor_value(int type) {    // restituisce la percentuale del periodo in cui l'onda è alta
+static uint16_t sensor_value(int type) {    // restituisce la percentuale del periodo in cui l'onda è alta
 	
 	return 100*(period0-low_value)/period0;
 }
@@ -69,13 +69,13 @@ void dimmer_resource_handler(void* request, void* response, uint8_t *buffer, uin
 		length = strlen(buffer)+1;
 		REST.set_header_content_type(response, REST.type.APPLICATION_JSON); 
 		REST.set_header_etag(response, (uint8_t *) &length, 1);
-		REST.set_response_status(response, REST.status.CREATED);
+		REST.set_response_status(response, REST.status.OK);
 		REST.set_response_payload(response, buffer, length);
 	}
-	if(method & METHOD_PUT) {
+	else if(method & METHOD_PUT) {
 		
 		const char *tmpbuf;
-		REST.get_post_variable(request, "duty", &tmpbuf); 
+		REST.get_post_variable(request, "v", &tmpbuf); 
 		value = atoi(tmpbuf);
 		low_value = ((period0*(100-value))/100);  
 		sensor_configure (period0,low_value);
