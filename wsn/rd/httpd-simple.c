@@ -71,6 +71,7 @@ MEMB(conns, struct httpd_state, 1);
 #define ISO_period  0x2e
 #define ISO_slash   0x2f
 
+const char http_get[] = "GET ";
 const char http_content_type_json[] = "Content-type:application/json\n\n";
 static
 PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
@@ -113,8 +114,6 @@ PT_THREAD(handle_output(struct httpd_state *s))
   PT_END(&s->outputpt);
 }
 /*---------------------------------------------------------------------------*/
-const char http_get[] = "GET ";
-//const char http_referer[] = "Referer:"
 static
 PT_THREAD(handle_input(struct httpd_state *s))
 {
@@ -122,13 +121,13 @@ PT_THREAD(handle_input(struct httpd_state *s))
 
   PSOCK_READTO(&s->sin, ISO_space);
 
-	// GET Request
+  // GET Request
   if(!strncmp(s->inputbuf, http_get, 4)) {
-    //PSOCK_CLOSE_EXIT(&s->sin);
+  //PSOCK_CLOSE_EXIT(&s->sin);
 		s->method = GET;
   } else {
 		s->method = POST;
-	}
+  }
   PSOCK_READTO(&s->sin, ISO_space);
 
   if(s->inputbuf[0] != ISO_slash) {
