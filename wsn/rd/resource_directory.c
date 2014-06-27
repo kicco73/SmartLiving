@@ -279,9 +279,11 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 				sprintf(s->http_output_payload+strlen(s->http_output_payload),"{\"n\":\"%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",rd[i].n,rd[i].v,rd[i].u,rd[i].rt,i+1<num_res?',':'\0');
 			}
 			sprintf(s->http_output_payload+strlen(s->http_output_payload),"]");
+		
 
 		} else { // GET a single resource
 			i = find_resource(s->filename);
+			printf("filename: %s, resource: %d\n", s->filename, i);
 			if(i != -1) {
 				sprintf(s->http_output_payload,"{\"n\":\"%s\",\"v\":%s}",rd[i].n,rd[i].v);
 			} else {

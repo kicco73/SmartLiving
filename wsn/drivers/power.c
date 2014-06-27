@@ -5,6 +5,7 @@
 #include "power.h"
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
+#include "uip-debug.h"
 
 #define INPUT_CHANNEL	(1 << INCH_0)
 #define INPUT_REFERENCE    SREF_1
@@ -46,7 +47,7 @@ static int sensor_configure(int type, int c) {
 
 static void read_power(char *buf){
 
- if(sensor_value(0) > OFFSET) sprintf(buf,"%d%d", (int)((sensor_value(0)-OFFSET)), (int)((sensor_value(0)-OFFSET))*100);
+ if(sensor_value(0) > OFFSET) sprintf(buf,"%d%d", (int)((sensor_value(0)-OFFSET)), (int) ((sensor_value(0)-OFFSET)-(int)(sensor_value(0)-OFFSET))*100);
  	  
 }
 
