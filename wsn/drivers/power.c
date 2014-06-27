@@ -5,6 +5,7 @@
 #include "power.h"
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
+#include "uip-debug.h"
 
 #define INPUT_CHANNEL	(1 << INCH_0)
 #define INPUT_REFERENCE    SREF_1

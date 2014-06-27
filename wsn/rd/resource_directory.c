@@ -294,7 +294,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 		
 
 		} else { // GET a single resource
-			i = find_resource(s->filename);
+			i = find_resource(s->filename+1);
 			if(i != -1) {
 				sprintf(s->http_output_payload,"{\"n\":\"%s\",\"v\":%s}",rd[i].n,rd[i].v);
 			} else {
