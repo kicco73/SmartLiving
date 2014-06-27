@@ -47,7 +47,7 @@
 
 #include "net/netstack.h"
 #include "dev/slip.h"
-//#include "dev/leds.h"
+#include "dev/leds.h"
 //#include "dev/button-sensor.h"
 #include "sys/etimer.h"
 
@@ -74,6 +74,8 @@
 #define HTTP_ON_UPDATE 1
 
 #define MAX_NUM_RESOURCES 10
+
+#define LED_TOGGLE_INTERVAL CLOCK_SECOND >> 2
 
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
@@ -188,7 +190,7 @@ static int find_resource(char *name) {
 	return -1;
 }
 
-RESOURCE(register_resource, METHOD_PUT, "register", "title=\"Reg\";rt=\"Text\"");
+RESOURCE(register_resource, METHOD_PUT, "register", "title=\"R\";rt=\"Text\"");
 
 /*---------------------------------------------------------------------------*/
 static int insert_resource(uip_ipaddr_t *ip_addr, char *n, char *v, char *u, char *rt) {
@@ -205,6 +207,10 @@ static int insert_resource(uip_ipaddr_t *ip_addr, char *n, char *v, char *u, cha
 	}
 
 	uip_ipaddr_copy(&(rd[i].address), ip_addr);
+	/*puts("ad:");
+	uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
+	puts("");*/
+	printf("r: %s\n", n);
 
 	strcpy(rd[i].n, n);
 	if(i != j) {
@@ -284,7 +290,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
 		} else { // GET a single resource
 			i = find_resource(s->filename);
-			printf("filename: %s, resource: %d\n", s->filename, i);
+			printf("G: %s, %d\n", s->filename, i);
 			if(i != -1) {
 				sprintf(s->http_output_payload,"{\"n\":\"%s\",\"v\":%s}",rd[i].n,rd[i].v);
 			} else {
@@ -298,7 +304,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
 		// First find the resource
 		i = find_resource(pch);
-		printf("PUT: resource: %s, %d\n", pch, i);
+		printf("P: %s, %d\n", pch, i);
 
 		if(i != -1) {
 			if((pch = strtok(NULL, "?")) != NULL && (pch = strtok(pch, "=")) != NULL && strcmp(pch, "v") == 0 && (pch = strtok(NULL, "=")) != NULL) {
@@ -353,14 +359,14 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 /*---------------------------------------------------------------------------*/
 
 void client_observing_handler(void *response) {
-	static int i, len;
+	uint8_t i, len;
 	char buf[16];
   const char *chunk;
 
 	i = coap_get_header_uri_path(response, &chunk);
-	len = sizeof(buf)-1;
-	memset(buf, 0, sizeof(buf)*sizeof(char));
-	strncpy(buf, chunk, i<len ? i : len);
+  len = sizeof(buf);
+	strncpy(buf, chunk, i<len? i : len);
+	buf[len-1];
 	i = find_resource(buf);
 
   len = coap_get_payload(response, (const uint8_t **) &chunk);
@@ -377,6 +383,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   static struct etimer et, observeETimer;
   rpl_dag_t *dag;
   static int i;
+	static char led_period = 0;
 
   PROCESS_BEGIN();
 
@@ -417,7 +424,7 @@ PROCESS_THREAD(border_router_process, ev, data)
    */
   NETSTACK_MAC.off(1);
 
-  etimer_set(&observeETimer, CLOCK_SECOND >> 2);
+  etimer_set(&observeETimer, LED_TOGGLE_INTERVAL);
 
 	rd = (struct resource*) malloc(MAX_NUM_RESOURCES*sizeof(struct resource));
 	memset(rd, 0, MAX_NUM_RESOURCES*sizeof(struct resource));
@@ -434,19 +441,25 @@ PROCESS_THREAD(border_router_process, ev, data)
 		driver[i]->init();
 	}
 #endif
-  while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&observeETimer));
-    etimer_restart(&observeETimer);
-    //leds_toggle(LEDS_GREEN);
 
-		for(i=0; i < num_res; i++) {
-			if(to_observe[i]) {
-				coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, rd[i].n, (notification_callback_t) client_observing_handler, NULL);
-				puts("New obs");
-				to_observe[i] = 0;
+	while(1) {
+		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&observeETimer));
+		if(led_period%2 || led_period >= num_res*2) {
+			leds_off(LEDS_ALL);
+		} else
+			leds_on(LEDS_GREEN);
+		if(led_period == 21) {
+			for(i=0; i < num_res; i++) {
+				if(to_observe[i]) {
+					coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, rd[i].n, (notification_callback_t) client_observing_handler, NULL);
+					printf("o4 %s\n", rd[i].n);
+					to_observe[i] = 0;
+				}
 			}
 		}
-  }
+		etimer_reset(&observeETimer);
+		led_period = (led_period + 1) % 22;
+	}
 
   PROCESS_END();
 }
@@ -479,10 +492,9 @@ PROCESS_THREAD(coap_put_process, ev, data)
 		coap_set_header_uri_path(request, rd[put_resource_idx].n+1);
 		sprintf(buf, "v=%s", put_value);
 		coap_set_payload(request, buf, strlen(buf));
-		puts("address:");
+		puts("a:");
 		uip_debug_ipaddr_print(&(rd[i].address));
-		puts("");
-		printf("i: %d\n", i);
+		printf("\ni:%d\n", i);
 		puts(rd[put_resource_idx].n+1);
 		puts(buf);
 		COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
