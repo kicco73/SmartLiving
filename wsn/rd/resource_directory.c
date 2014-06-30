@@ -184,7 +184,7 @@ static char coap_success;
 static int find_resource(char *name) {
 	int i;
 	for(i=0;i<num_res;i++) {
-		puts(rd[i].n);
+//		puts(rd[i].n);
 		if(!strcmp(name, rd[i].n)) 
 			return i;
 	}
@@ -351,20 +351,22 @@ set_prefix_64(uip_ipaddr_t *prefix_64)
 
 /*---------------------------------------------------------------------------*/
 
-void client_observing_handler(void *response) {
+void client_observing_handler(coap_observee_t * subject, void *notification, coap_notification_flag_t flag) {
 	uint8_t i, len;
 	char buf[8];
-	const char *chunk;
+	const uint8_t *chunk;
 
-	i = coap_get_header_uri_path(response, &chunk);
-	len = sizeof(buf);
-	strncpy(buf, chunk, len-1);
-	buf[len-1] = 0;
-	i = find_resource(buf);
+	if(flag) { // Consider only "NOTIFICATION_OK", which ignores "Added x/x" messages
+		len = sizeof(buf);
+		sprintf(buf, "/%s", subject->url);
+		buf[len-1] = 0;
 
-	len = coap_get_payload(response, (const uint8_t **) &chunk);
-	strncpy(rd[i].v, chunk, sizeof(rd[i].v)-1);
-	rd[i].v[sizeof(rd[i].v)-1] = 0;
+		i = find_resource(buf);
+		len = coap_get_payload(notification, &chunk);
+
+		strncpy(rd[i].v, chunk, sizeof(rd[i].v)-1);
+		rd[i].v[sizeof(rd[i].v)-1] = 0;
+	}
 
 #if HTTP_ON_UPDATE
 	process_post(&on_update_process, put_event, &i);
@@ -448,7 +450,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 		if(led_period == 21) {
 			for(i=0; i < num_res; i++) {
 				if(to_observe[i]) {
-					coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, rd[i].n, (notification_callback_t) client_observing_handler, NULL);
+					coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, (rd[i].n)+1, client_observing_handler, NULL);
 					printf("o4 %s\n", rd[i].n);
 					to_observe[i] = 0;
 				}
@@ -491,11 +493,11 @@ PROCESS_THREAD(coap_put_process, ev, data)
 		coap_set_header_uri_path(request, rd[put_resource_idx].n+1);
 		sprintf(buf, "v=%s", put_value);
 		coap_set_payload(request, buf, strlen(buf));
-		puts("a:");
+//		puts("a:");
 		uip_debug_ipaddr_print(&(rd[i].address));
 		printf("\ni:%d\n", i);
-		puts(rd[put_resource_idx].n+1);
-		puts(buf);
+//		puts(rd[put_resource_idx].n+1);
+//		puts(buf);
 		COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
 	}
 
