@@ -17,6 +17,7 @@
 <?php } ?>
 
 	<div class="body directory">
+		<a class="smallButton discoverDirectories" title="Discover resource directories">Discover</a>
 		<a class="smallButton addDirectory" title="Add new resource directory">Add</a>
 		<input class="addDirectory"></input>
 	</div>
@@ -24,6 +25,7 @@
 <script>
 
 $(document).ready(function() {
+	$(".discoverDirectories").click(directory.ajaxDiscover);
 	$(".rebuildDirectory").click(directory.ajaxRebuild);
 	$(".removeDirectory").click(directory.ajaxRemove);
 	$("input.addDirectory").button().watermark("Http url of new resource directory");

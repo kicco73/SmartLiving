@@ -119,6 +119,17 @@ var resource = {
 };
 
 var directory = {
+  ajaxDiscover: function() {
+	observe.pause();
+	$.ajax("/directories/ajaxDiscover")
+		.done(function(data) {
+			window.location = window.location;
+		}).fail(function(x) {
+			alert("Cannot discover resource directories");
+			observe.run();
+		});
+  },
+
   ajaxRebuild: function() {
 	var div = $(this);
 	var rel = div.attr("rel");

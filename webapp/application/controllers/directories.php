@@ -68,6 +68,14 @@ class Directories extends CI_Controller {
 		$this->output->set_status_header('204'); // no content	
 	}
 	
+	public function ajaxDiscover() {
+		$output = shell_exec("/home/user/SmartLiving/libcoap-4.1.1/examples/coap-client -B2 -m GET coap://[ff02::1]/.well-known/core");
+		$this->output->set_status_header('500', 'tutto finto');
+		$this->output
+			->set_header("Content-Length: ".strlen($output))
+			->set_output($output);
+	}
+
 	public function url_check($input) {
 		return $ok;
 	}
