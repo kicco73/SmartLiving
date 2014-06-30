@@ -67,6 +67,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#define FAR __attribute__ ((section ("far_rom")))
 
 // COAP_DEFAULT_PORT = 5683
 #define REMOTE_PORT	UIP_HTONS(COAP_DEFAULT_PORT)
@@ -101,7 +102,7 @@ struct resource {
 	char rt[8];
 };
  
-static struct resource *rd;
+static struct resource rd[MAX_NUM_RESOURCES];
 
 PROCESS(border_router_process, "BR");
 PROCESS(webserver_nogui_process, "WS");
@@ -182,15 +183,19 @@ static char coap_success;
 
 static int find_resource(char *name) {
 	int i;
-	for(i=0;i<num_res;i++)
+	for(i=0;i<num_res;i++) {
+		puts(rd[i].n);
 		if(!strcmp(name, rd[i].n)) 
 			return i;
+	}
 	return -1;
 }
 
 RESOURCE(register_resource, METHOD_PUT, "register", "title=\"R\";rt=\"Text\"");
 
+
 /*---------------------------------------------------------------------------*/
+
 void register_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
 	uint8_t length;
 	int i; // i: place where to put the new resource
@@ -214,7 +219,7 @@ void register_resource_handler(void* request, void* response, uint8_t *buffer, u
 
 		// Resource already present, then overwrite
 		i = find_resource(new_resource.n);
-		printf("S:%s\n", new_resource.n);
+		printf("S:'%s'\n", new_resource.n);
 		if(i == -1) {
 			printf("N:%s\n", new_resource.n);
 			// Not enough space in memory for this new resource
@@ -235,12 +240,13 @@ void register_resource_handler(void* request, void* response, uint8_t *buffer, u
 		puts("");*/
 		//printf(": %s %s\n", new_resource.n, new_resource.rt);
 		rd[i] = new_resource;
-		to_observe[i] = 0;
-		//to_observe[i] = !strcmp(new_resource.rt, "sensor") ; // observe only sensors
+		to_observe[i] = !strcmp(new_resource.rt, "sensor") ; // observe only sensors
 	}
 	REST.set_response_status(response, REST.status.OK);
 }
+
 /*---------------------------------------------------------------------------*/
+
 PROCESS_THREAD(webserver_nogui_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -255,6 +261,7 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
 {
@@ -264,7 +271,7 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
 	if(s->method == GET) {
 
-		if(!strncmp(s->filename, "/" ,1)) { // GET all resources
+		if(!strcmp(s->filename, "/")) { // GET all resources
 			int max = sizeof(s->http_output_payload)-2, len = 1;
 			strcpy(s->http_output_payload,"[");
 			for(i=0; i < num_res; i++) {
@@ -308,11 +315,13 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 	PSOCK_END(&s->sout);
 }
 /*---------------------------------------------------------------------------*/
+
 httpd_simple_script_t
 httpd_simple_get_script(const char *name)
 {
   return generate_routes;
 }
+
 /*---------------------------------------------------------------------------*/
 #endif /* WEBSERVER */
 
@@ -326,7 +335,9 @@ request_prefix(void)
   slip_send();
   uip_len = 0;
 }
+
 /*---------------------------------------------------------------------------*/
+
 void
 set_prefix_64(uip_ipaddr_t *prefix_64)
 {
@@ -361,6 +372,7 @@ void client_observing_handler(void *response) {
 }
 
 /*---------------------------------------------------------------------------*/
+
 PROCESS_THREAD(border_router_process, ev, data)
 {
   static struct etimer et, observeETimer;
@@ -409,7 +421,6 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   etimer_set(&observeETimer, LED_TOGGLE_INTERVAL);
 
-	rd = (struct resource*) malloc(MAX_NUM_RESOURCES*sizeof(struct resource));
 	memset(rd, 0, MAX_NUM_RESOURCES*sizeof(struct resource));
 
 	put_event = process_alloc_event();
@@ -428,10 +439,12 @@ PROCESS_THREAD(border_router_process, ev, data)
 
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&observeETimer));
+#if 1
 		if(led_period%2 || led_period >= num_res*2) {
 			leds_off(LEDS_ALL);
 		} else
 			leds_on(LEDS_GREEN);
+
 		if(led_period == 21) {
 			for(i=0; i < num_res; i++) {
 				if(to_observe[i]) {
@@ -441,6 +454,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 				}
 			}
 		}
+#endif
 		etimer_reset(&observeETimer);
 		led_period = (led_period + 1) % 22;
 	}
@@ -449,6 +463,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 }
 
 /*---------------------------------------------------------------------------*/
+
 static void client_put_handler(void *response) {
 	//int i;
   int status = ((coap_packet_t*)response)->code;
