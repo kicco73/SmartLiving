@@ -356,7 +356,7 @@ void client_observing_handler(coap_observee_t * subject, void *notification, coa
 	char buf[8];
 	const uint8_t *chunk;
 
-	if(flag) { // Consider only "NOTIFICATION_OK", which ignores "Added x/x" messages
+	if(NOTIFICATION_OK) { // Consider only "NOTIFICATION_OK", which ignores "Added x/x" messages
 		len = sizeof(buf);
 		sprintf(buf, "/%s", subject->url);
 		buf[len-1] = 0;
