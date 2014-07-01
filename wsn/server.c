@@ -165,25 +165,30 @@ PROCESS_THREAD(registration_process, ev, data) {
 	etimer_set(&timer, BOOT_WAIT_INTERVAL);
 	PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 	while(1) {
-		registered = 0;
+		registered = !sizeof(driver);
 		//process_post(&status_process, ledoff_event, NULL);
 		PRINTF("*** DEREGISTERING ALL OBSERVERS\n");
 		while((obs = (coap_observer_t*)list_head(coap_get_observers())))
 			coap_remove_observer(obs);
 		PRINTF("*** REGISTERING ALL RESOURCES TO RESOURCE DIRECTORY\n");
-		sprint_ipaddr(buf, &ipaddr);
-		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++)
+		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
+			sprint_ipaddr(buf, &ipaddr);
 			sprintf(buf+strlen(buf), "\n/%s\t%s\t%s", driver[i]->name, driver[i]->unit, driver[i]->type);
-		strcat(buf, "\n");
-		PRINTF("*** SENDING MESSAGE WITH PAYLOAD: %s\n", buf);
-		coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-		coap_set_header_uri_path(request, service_url);
-		coap_set_payload(request, buf, strlen(buf));
-		COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
+			strcat(buf, "\n");
+			PRINTF("*** SENDING MESSAGE WITH PAYLOAD: %s\n", buf);
+			coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+			coap_set_header_uri_path(request, service_url);
+			coap_set_payload(request, buf, strlen(buf));
+			COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
+			etimer_set(&timer, BOGUS_WAIT_INTERVAL);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+			if(!registered) {
+				PRINTF("*** ERROR WHILE REGISTERING\n");
+				break;
+			}
+		}
 		PRINTF("*** EXITED\n");
 		// allow registered variable to be set
-		etimer_set(&timer, BOGUS_WAIT_INTERVAL);
-		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 		//process_post(&status_process, ledoff_event, NULL);
 		if(registered) {
 			etimer_set(&timer, REGISTER_INTERVAL);

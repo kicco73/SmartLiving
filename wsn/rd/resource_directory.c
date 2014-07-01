@@ -442,8 +442,10 @@ PROCESS_THREAD(border_router_process, ev, data)
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&observeETimer));
 #if 1
+		if(led_period % 4)
+			leds_toggle(LEDS_RED);
 		if(led_period%2 || led_period >= num_res*2) {
-			leds_off(LEDS_ALL);
+			leds_off(LEDS_GREEN);
 		} else
 			leds_on(LEDS_GREEN);
 
