@@ -72,7 +72,7 @@ MEMB(conns, struct httpd_state, 1);
 #define ISO_slash   0x2f
 
 const char http_get[] = "GET ";
-const char http_content_type_json[] = "Content-type:application/json\n\n";
+//const char http_content_type_json[] = "Content-type:application/json\n\n";
 static
 PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
 {
@@ -80,7 +80,7 @@ PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
 
   SEND_STRING(&s->sout, statushdr);
 
-  SEND_STRING(&s->sout, http_content_type_json);
+  //SEND_STRING(&s->sout, http_content_type_json);
 
   PSOCK_END(&s->sout);
 }
@@ -104,9 +104,9 @@ PT_THREAD(handle_output(struct httpd_state *s))
   s->script = httpd_simple_get_script(&s->filename[1]);
   PT_WAIT_THREAD(&s->outputpt, s->script(s));
 
-  PT_WAIT_THREAD(&s->outputpt, send_headers(s, s->http_header ? s->http_header : HTTP_HEADER_200));
-  s->http_header = NULL;
-  PT_WAIT_THREAD(&s->outputpt, send_payload(s));
+  //PT_WAIT_THREAD(&s->outputpt, send_headers(s, s->http_header ? s->http_header : HTTP_HEADER_200));
+  //s->http_header = NULL;
+  //PT_WAIT_THREAD(&s->outputpt, send_payload(s));
   s->http_output_payload[0] = 0;
 
   s->script = NULL;

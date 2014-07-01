@@ -53,16 +53,17 @@
 #define GET 0
 #define POST 1
 
-#define HTTP_HEADER_200 "HTTP/1.0 200\n"
+#define HTTP_HEADER_200 "HTTP/1.0 200\nContent-type:application/json\n\n"
 #define HTTP_HEADER_400 "HTTP/1.0 400\n"
 #define HTTP_HEADER_404 "HTTP/1.0 404\n"
+#define HTTP_CONTENT_TYPE_JSON "Content-type:application/json\n\n"
 
 struct httpd_state;
 typedef char (* httpd_simple_script_t)(struct httpd_state *s);
 
 struct httpd_state {
-  char *http_header;
-  char http_output_payload[512];
+  //char *http_header;
+  char http_output_payload[64];
   int method;
   struct timer timer;
   struct psock sin, sout;
