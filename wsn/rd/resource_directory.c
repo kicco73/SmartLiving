@@ -267,28 +267,45 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 {
 	PSOCK_BEGIN(&s->sout);
 
-	int i;
+	static int i;
 
 	if(s->method == GET) {
 
 		if(!strcmp(s->filename, "/")) { // GET all resources
-			int max = sizeof(s->http_output_payload)-2, len = 1;
-			strcpy(s->http_output_payload,"[");
+			int max = sizeof(s->http_output_payload)-2;
+
+			// HTTP header
+			SEND_STRING(&s->sout, num_res ? HTTP_HEADER_200 : HTTP_HEADER_200 "[]");
+			//SEND_STRING(&s->sout, HTTP_CONTENT_TYPE_JSON);
+
+			// HTTP payload
+			//SEND_STRING(&s->sout, "[");
 			for(i=0; i < num_res; i++) {
-				len = strlen(s->http_output_payload);
-				snprintf(s->http_output_payload+len, max - len, 
+			strcpy(s->http_output_payload, i? "": "[");
+				sprintf(s->http_output_payload+strlen(s->http_output_payload), 
 					"{\"n\":\"%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",
-					rd[i].n, rd[i].v, rd[i].u, rd[i].rt, i < num_res-1? ',' : '\0');
+					rd[i].n, rd[i].v, rd[i].u, rd[i].rt, i < num_res-1? ',' : ']');
+				SEND_STRING(&s->sout, s->http_output_payload);
 			}
-			strcpy(s->http_output_payload+strlen(s->http_output_payload),"]");
+
 		} else { // GET a single resource
 			i = find_resource(s->filename);
 			//printf("G: %s, %d\n", s->filename, i);
 			if(i != -1) {
+				// HTTP header
+				SEND_STRING(&s->sout, HTTP_HEADER_200);
+				//SEND_STRING(&s->sout, HTTP_CONTENT_TYPE_JSON);
+
+				// HTTP payload
 				sprintf(s->http_output_payload,"{\"n\":\"%s\",\"v\":%s}",rd[i].n,rd[i].v);
+				SEND_STRING(&s->sout, s->http_output_payload);
 			} else {
-				s->http_header = HTTP_HEADER_404;
-				strcpy(s->http_output_payload, "{}");
+				// HTTP header
+				SEND_STRING(&s->sout, HTTP_HEADER_404);
+				//SEND_STRING(&s->sout, HTTP_CONTENT_TYPE_JSON);
+
+				// HTTP payload
+				//SEND_STRING(&s->sout, "{}");
 			}
 		}
 
@@ -297,20 +314,27 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
 		// First find the resource
 		i = find_resource(pch);
-		printf("P: %s, %d\n", pch, i);
 
 		if(i != -1) {
 			if((pch = strtok(NULL, "?")) != NULL && (pch = strtok(pch, "=")) != NULL && !strcmp(pch, "v") && (pch = strtok(NULL, "="))) {
-				printf("n: %s, v: %s\n", rd[i].n, pch);
 				put_resource_idx = i;
 				strcpy(put_value, pch);
 				process_post(&coap_put_process, put_event, NULL);
-				s->http_header = HTTP_HEADER_200;
-			} else
-				s->http_header = HTTP_HEADER_400;
-		} else
-			s->http_header = HTTP_HEADER_404;
-		strcpy(s->http_output_payload, "{}");
+				// HTTP header
+				SEND_STRING(&s->sout, HTTP_HEADER_200 "{}");
+				
+			} else {
+				// HTTP header
+				SEND_STRING(&s->sout, HTTP_HEADER_400);
+			}
+		} else {
+			// HTTP header
+			SEND_STRING(&s->sout, HTTP_HEADER_404);
+		}
+		//SEND_STRING(&s->sout, HTTP_CONTENT_TYPE_JSON);
+
+		// HTTP payload
+		//SEND_STRING(&s->sout, "{}");
 	}
 	PSOCK_END(&s->sout);
 }
@@ -356,21 +380,22 @@ void client_observing_handler(coap_observee_t * subject, void *notification, coa
 	char buf[8];
 	const uint8_t *chunk;
 
-	if(NOTIFICATION_OK) { // Consider only "NOTIFICATION_OK", which ignores "Added x/x" messages
+	if(flag & NOTIFICATION_OK) { // Consider only "NOTIFICATION_OK", which ignores "Added x/x" messages
 		len = sizeof(buf);
 		sprintf(buf, "/%s", subject->url);
 		buf[len-1] = 0;
 
 		i = find_resource(buf);
 		len = coap_get_payload(notification, &chunk);
-
+		puts("payl");
+		puts(chunk);
 		strncpy(rd[i].v, chunk, sizeof(rd[i].v)-1);
 		rd[i].v[sizeof(rd[i].v)-1] = 0;
 #if HTTP_ON_UPDATE
-		process_post(&on_update_process, put_event, &rd[i]);
+		put_resource_idx = i;
+		process_post(&on_update_process, put_event, NULL);
 #endif
 	}
-
 }
 
 /*---------------------------------------------------------------------------*/
@@ -452,6 +477,14 @@ PROCESS_THREAD(border_router_process, ev, data)
 		if(led_period == 21) {
 			for(i=0; i < num_res; i++) {
 				if(to_observe[i]) {
+					/*coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
+					coap_set_header_uri_path(request, rd[put_resource_idx].n+1);
+					sprintf(buf, "v=%s", put_value);
+					coap_set_payload(request, buf, strlen(buf));
+					uip_debug_ipaddr_print(&(rd[i].address));
+					printf("\ni:%d\n", i);
+					COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);*/
+					
 					coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, (rd[i].n)+1, client_observing_handler, NULL);
 					printf("o4 %s\n", rd[i].n);
 					to_observe[i] = 0;
@@ -512,7 +545,7 @@ void handle_request(struct psock *ps, struct resource *r) {
 
 		static char buf[128];
 		char buf2[128];
-		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]", r->n, r->v);
+		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]", rd[put_resource_idx].n, rd[put_resource_idx].v);
 
 		snprintf(buf, sizeof(buf)-1, "POST /resources/onUpdate HTTP/1.0\nContent-Length: %d\nContent-type: application/json\n\n%s", strlen(buf2), buf2);
 		buf[sizeof(buf)-1] = 0;
@@ -532,8 +565,8 @@ PROCESS_THREAD(on_update_process, ev, data)
 	static uip_ip6addr_t webapp;
 	uip_ip6addr(&webapp, 0xaaaa,0,0,0,0,0,0,1);
 
-  while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(ev == put_event);
+	while(1) {
+	PROCESS_WAIT_EVENT_UNTIL(ev == put_event);
 		puts("U!");
 		tcp_connect(&webapp, UIP_HTONS(80), NULL);
 		
@@ -544,9 +577,9 @@ PROCESS_THREAD(on_update_process, ev, data)
 				PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
 				handle_request(&ps, (struct resource*) data);
 			}
-    } 
-  }
-  PROCESS_END();
+		} 
+	}
+	PROCESS_END();
 }
 #endif
 
