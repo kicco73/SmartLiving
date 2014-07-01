@@ -366,11 +366,11 @@ void client_observing_handler(coap_observee_t * subject, void *notification, coa
 
 		strncpy(rd[i].v, chunk, sizeof(rd[i].v)-1);
 		rd[i].v[sizeof(rd[i].v)-1] = 0;
+#if HTTP_ON_UPDATE
+		process_post(&on_update_process, put_event, &rd[i]);
+#endif
 	}
 
-#if HTTP_ON_UPDATE
-	process_post(&on_update_process, put_event, &i);
-#endif
 }
 
 /*---------------------------------------------------------------------------*/
@@ -507,14 +507,15 @@ PROCESS_THREAD(coap_put_process, ev, data)
 }
 
 #if HTTP_ON_UPDATE
-void handle_request(struct psock *ps, int *i) {
+void handle_request(struct psock *ps, struct resource *r) {
 		PSOCK_BEGIN(ps);
 
 		static char buf[128];
 		char buf2[128];
-		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]\n", rd[*i].n, rd[*i].v);
+		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]", r->n, r->v);
 
 		snprintf(buf, sizeof(buf)-1, "POST /resources/onUpdate HTTP/1.0\nContent-Length: %d\nContent-type: application/json\n\n%s", strlen(buf2), buf2);
+		buf[sizeof(buf)-1] = 0;
 		SEND_STRING(ps, buf);
 
 		PSOCK_CLOSE(&ps);
@@ -541,7 +542,7 @@ PROCESS_THREAD(on_update_process, ev, data)
 		  PSOCK_INIT(&ps, (uint8_t *) buffer, sizeof(buffer));
 			while(!(uip_aborted() || uip_closed() || uip_timedout())) {
 				PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
-				handle_request(&ps, data);
+				handle_request(&ps, (struct resource*) data);
 			}
     } 
   }
