@@ -4,11 +4,12 @@
 #include "er-coap-13.h"
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
+#include "net/uip-debug.h"
 #include "motion.h"
 
 #define INPUT_CHANNEL      (1 << INCH_0)
 #define INPUT_REFERENCE    SREF_1
-#define MOTION_MEM    ADC12MEM0
+#define MOTION_MEM    ADC12MEM1
 
 const struct sensors_sensor motion_sensor;
 
@@ -61,7 +62,7 @@ void motion_resource_periodic_handler(resource_t *r) {
 	PRINTF("*** motion_resource_periodic_handler(): called!\n");
 	sprintf(buffer, "%d", 200*sensor_value(0));
 	coap_packet_t notification[1];
-	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
+	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
 	PRINTF("*** motion_resource_periodic_handler(): done\n");

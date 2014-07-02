@@ -9,7 +9,7 @@
 #include "dev/light-ziglet.h"
 #include "dev/i2cmaster.h"
 
-PERIODIC_RESOURCE(light_resource, METHOD_GET, "light", "title=\"light sensor\";rt=\"Text\";obs", 5*CLOCK_SECOND);
+PERIODIC_RESOURCE(light_resource, METHOD_GET, "light", "title=\"light sensor\";rt=\"Text\";obs", 11*CLOCK_SECOND);
 
 /*---------------------------------------------------------------------------*/
 
@@ -43,7 +43,7 @@ void light_resource_periodic_handler(resource_t *r) {
 	PRINTF("*** light_resource_periodic_handler(): called!\n");
 	sprintf(buffer, "%d", light_ziglet_read());
 	coap_packet_t notification[1];
-	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
+	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
 	PRINTF("*** light_resource_periodic_handler(): done!\n");

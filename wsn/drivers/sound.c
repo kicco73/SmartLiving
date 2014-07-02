@@ -12,7 +12,7 @@
 
 const struct sensors_sensor sound_sensor;
 
-PERIODIC_RESOURCE(sound_resource, METHOD_GET, "sound", "title=\"sound sensor\";rt=\"Text\";obs", 5*CLOCK_SECOND);
+PERIODIC_RESOURCE(sound_resource, METHOD_GET, "sound", "title=\"sound sensor\";rt=\"Text\";obs", 13*CLOCK_SECOND);
 
 /*---------------------------------------------------------------------------*/
 
@@ -66,7 +66,7 @@ void sound_resource_periodic_handler(resource_t *r) {
 	PRINTF("*** sound_resource_periodic_handler(): called!\n");
 	sprintf(buffer, "%d", sensor_value(0));
 	coap_packet_t notification[1];
-	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
+	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
 	PRINTF("*** sound_resource_periodic_handler(): done!\n");

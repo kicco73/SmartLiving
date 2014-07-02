@@ -9,10 +9,10 @@
 #include "dev/i2cmaster.h"
 
 static int value;
-
 const struct sensors_sensor fan_sensor;
 
 /*---------------------------------------------------------------------------*/
+
 RESOURCE(fan_resource, METHOD_GET|METHOD_PUT, "fan", "title=\"fan status\";rt=\"Text\"");
 
 static void sensor_init() {

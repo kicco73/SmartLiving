@@ -47,9 +47,8 @@ static int sensor_configure(int type, int c) {
 
 static void read_power(char *buf){
 
-//if(sensor_value(0) > OFFSET) sprintf(buf,"%d.%d", (int)((sensor_value(0)-OFFSET))*SCALE_FACTOR, (int) ((sensor_value(0)-OFFSET)*SCALE_FACTOR-(int)((sensor_value(0)-OFFSET)*SCALE_FACTOR)*100));
-
-if(sensor_value(0) > OFFSET) sprintf(buf,"%d.%d", (int)((sensor_value(0)-OFFSET)*SCALE_FACTOR), (int) ((sensor_value(0)-OFFSET)*SCALE_FACTOR-(int)((sensor_value(0)-OFFSET)*SCALE_FACTOR)*100));
+int value_true=(sensor_value(0)-OFFSET);
+if(sensor_value(0) > OFFSET) sprintf(buf,"%d.%d", (int)(value_true*SCALE_FACTOR), (int) ((value_true*SCALE_FACTOR-((int)(value_true*SCALE_FACTOR)))*100));
 
 }
 
@@ -77,7 +76,7 @@ void power_resource_periodic_handler(resource_t *r) {
 	PRINTF("*** power_resource_periodic_handler(): called!\n");
 	read_power(buffer);
 	coap_packet_t notification[1];
-	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
+	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
 	PRINTF("*** power_resource_periodic_handler(): done!\n");

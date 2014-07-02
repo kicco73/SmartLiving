@@ -15,9 +15,7 @@
 #define VCC 3.3
 
 const struct sensors_sensor co_sensor;
-PERIODIC_RESOURCE(co_resource, METHOD_GET, "co", "title=\"CO sensor\";rt=\"Text\";obs", 5*CLOCK_SECOND);
-
-
+PERIODIC_RESOURCE(co_resource, METHOD_GET, "xco", "title=\"CO sensor\";rt=\"Text\";obs", 7*CLOCK_SECOND);
 
 /*---------------------------------------------------------------------------*/
 
@@ -68,11 +66,11 @@ static void read_co(char *buf){
 static unsigned int co;
 static uint32_t sens_1000;
 	
-   	sens_1000 = 122850/co-227;  // ho moltiplicato per 1000
+   	sens_1000 = 122850/co; //-227;  // ho moltiplicato per 1000
 	if (sens_1000>800) sprintf(buf,"%d",100);
 	else if (sens_1000>500)
-		sprintf(buf,"%d%d", (int)((-300*sens_1000)+250000)/1000,(int)(((-300*sens_1000)+250000)-(int)(-300*sens_1000+250000))/10);
-	else sprintf(buf, "%d%d",(int)(-3600*sens_1000+1900000),(int)((-3600*sens_1000+1900000)-(int)(-3600*sens_1000+1900000))/10);
+		sprintf(buf,"%lu", (uint32_t)((-300*sens_1000)+250000)/1000);
+	else sprintf(buf, "%lu",(uint32_t)(-3600*sens_1000+1900000)/1000);
 }
 
 
@@ -93,12 +91,14 @@ void co_resource_handler(void* request, void* response, uint8_t *buffer, uint16_
 }
 
 /*---------------------------------------------------------------------------*/
+
 void co_resource_periodic_handler(resource_t *r) {
 	static int event_counter;
 	char buffer[16];
+	//PRINTF("*** co_resource_periodic_handler(): called!\n");
 	read_co(buffer);
 	coap_packet_t notification[1];
-	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
+	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
 }
@@ -112,9 +112,9 @@ void co_resource_periodic_handler(resource_t *r) {
 SENSORS_SENSOR(co_sensor, "CO sensor", sensor_value, sensor_configure, sensor_status);
 
 struct Driver CO_DRIVER = {
-	.name = "co",
+	.name = "xco",
 	.description = "CO sensor",
-	.unit = "???",
+	.unit = "ppm",
 	.type = "sensor",
 	.init = sensor_init, 
 };

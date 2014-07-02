@@ -15,7 +15,7 @@
 #define VCC 3.3
 
 const struct sensors_sensor co2_sensor;
-PERIODIC_RESOURCE(co2_resource, METHOD_GET, "co2", "title=\"CO2 sensor\";rt=\"Text\";obs", 5*CLOCK_SECOND);
+PERIODIC_RESOURCE(co2_resource, METHOD_GET, "co2", "title=\"CO2 sensor\";rt=\"Text\";obs", 9*CLOCK_SECOND);
 
 
 
@@ -85,7 +85,7 @@ void co2_resource_periodic_handler(resource_t *r) {
 	char buffer[16];
 	read_co2(buffer);
 	coap_packet_t notification[1];
-	coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0);
+	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
 	REST.notify_subscribers(r, event_counter++, notification);
 }
@@ -101,7 +101,7 @@ SENSORS_SENSOR(co2_sensor, "CO2 sensor", sensor_value, sensor_configure, sensor_
 struct Driver CO2_DRIVER = {
 	.name = "co2",
 	.description = "CO2 sensor",
-	.unit = "???",
+	.unit = "ppm",
 	.type = "sensor",
 	.init = sensor_init, 
 };

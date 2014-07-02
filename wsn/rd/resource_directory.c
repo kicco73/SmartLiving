@@ -175,9 +175,6 @@ static driver_t driver[] = {
 #endif
 };
 #endif
-static int put_resource_idx;
-static char put_value[8];
-static char coap_success;
 
 /*---------------------------------------------------------------------------*/
 
@@ -317,9 +314,10 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 
 		if(i != -1) {
 			if((pch = strtok(NULL, "?")) != NULL && (pch = strtok(pch, "=")) != NULL && !strcmp(pch, "v") && (pch = strtok(NULL, "="))) {
-				put_resource_idx = i;
-				strcpy(put_value, pch);
-				process_post(&coap_put_process, put_event, NULL);
+				const int size = sizeof(rd[i].v)-1;
+				strncpy(rd[i].v, pch, size);
+				rd[i].v[size] = 0;
+				process_post(&coap_put_process, put_event, &rd[i]);
 				// HTTP header
 				SEND_STRING(&s->sout, HTTP_HEADER_200 "{}");
 				
@@ -392,8 +390,7 @@ void client_observing_handler(coap_observee_t * subject, void *notification, coa
 		strncpy(rd[i].v, chunk, sizeof(rd[i].v)-1);
 		rd[i].v[sizeof(rd[i].v)-1] = 0;
 #if HTTP_ON_UPDATE
-		put_resource_idx = i;
-		process_post(&on_update_process, put_event, NULL);
+		process_post(&on_update_process, put_event, &rd[i]);
 #endif
 	}
 }
@@ -468,13 +465,13 @@ PROCESS_THREAD(border_router_process, ev, data)
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&observeETimer));
 #if 1
 		if(led_period % 4)
-			leds_toggle(LEDS_RED);
+			leds_toggle(LEDS_BLUE);
 		if(led_period%2 || led_period >= num_res*2) {
 			leds_off(LEDS_GREEN);
 		} else
 			leds_on(LEDS_GREEN);
 
-		if(led_period == 21) {
+		if(led_period == 19) {
 			for(i=0; i < num_res; i++) {
 				if(to_observe[i]) {
 					/*coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
@@ -493,7 +490,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 		}
 #endif
 		etimer_reset(&observeETimer);
-		led_period = (led_period + 1) % 22;
+		led_period = (led_period + 1) % 20;
 	}
 
   PROCESS_END();
@@ -503,14 +500,13 @@ PROCESS_THREAD(border_router_process, ev, data)
 
 static void client_put_handler(void *response) {
 	//int i;
-  int status = ((coap_packet_t*)response)->code;
+  	//int status = ((coap_packet_t*)response)->code;
 
-	if(status == REST.status.OK || status == REST.status.CHANGED) {
-		strcpy(rd[put_resource_idx].v, put_value);
-		coap_success = 1;
-	} else {
-		coap_success = 0;
-	}
+	//if(status == REST.status.OK || status == REST.status.CHANGED) {
+		//coap_success = 1;
+	//} else {
+		//coap_success = 0;
+	//}
 }
 
 /*---------------------------------------------------------------------------*/
@@ -524,16 +520,17 @@ PROCESS_THREAD(coap_put_process, ev, data)
 	
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(ev == put_event);
+		struct resource* r = (struct resource*)data;
 		coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
-		coap_set_header_uri_path(request, rd[put_resource_idx].n+1);
-		sprintf(buf, "v=%s", put_value);
+		coap_set_header_uri_path(request, r->n+1);
+		sprintf(buf, "v=%s", r->v);
 		coap_set_payload(request, buf, strlen(buf));
 //		puts("a:");
-		uip_debug_ipaddr_print(&(rd[i].address));
+		uip_debug_ipaddr_print(&(r->address));
 		printf("\ni:%d\n", i);
 //		puts(rd[put_resource_idx].n+1);
 //		puts(buf);
-		COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);
+		COAP_BLOCKING_REQUEST(&(r->address), REMOTE_PORT, request, client_put_handler);
 	}
 
 	PROCESS_END();
@@ -545,7 +542,7 @@ void handle_request(struct psock *ps, struct resource *r) {
 
 		static char buf[128];
 		char buf2[128];
-		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]", rd[put_resource_idx].n, rd[put_resource_idx].v);
+		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]", r->n, r->v);
 
 		snprintf(buf, sizeof(buf)-1, "POST /resources/onUpdate HTTP/1.0\nContent-Length: %d\nContent-type: application/json\n\n%s", strlen(buf2), buf2);
 		buf[sizeof(buf)-1] = 0;
@@ -563,11 +560,13 @@ PROCESS_THREAD(on_update_process, ev, data)
 	static struct psock ps;
 	static char buffer[128];
 	static uip_ip6addr_t webapp;
+	static struct resource *myData = NULL;
 	uip_ip6addr(&webapp, 0xaaaa,0,0,0,0,0,0,1);
 
 	while(1) {
 	PROCESS_WAIT_EVENT_UNTIL(ev == put_event);
 		puts("U!");
+		myData = data;
 		tcp_connect(&webapp, UIP_HTONS(80), NULL);
 		
 		PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
@@ -575,7 +574,7 @@ PROCESS_THREAD(on_update_process, ev, data)
 		  PSOCK_INIT(&ps, (uint8_t *) buffer, sizeof(buffer));
 			while(!(uip_aborted() || uip_closed() || uip_timedout())) {
 				PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
-				handle_request(&ps, (struct resource*) data);
+				handle_request(&ps, myData);
 			}
 		} 
 	}
