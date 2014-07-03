@@ -187,3 +187,17 @@ var directory = {
 
 };
 
+$(document).ready(function() {
+	var timer = null;
+
+	$.ajaxSetup({
+	    beforeSend: function() {
+		timer = setTimeout($.blockUI, 100);
+	    },
+    	    complete: function() {
+		clearTimeout(timer);
+		$.unblockUI();
+    	    }
+	});
+});
+
