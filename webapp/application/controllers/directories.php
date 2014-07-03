@@ -69,11 +69,14 @@ class Directories extends CI_Controller {
 	}
 	
 	public function ajaxDiscover() {
-		$output = shell_exec("/home/user/SmartLiving/libcoap-4.1.1/examples/coap-client -B2 -m GET coap://[ff02::1]/.well-known/core");
-		$this->output->set_status_header('500', 'tutto finto');
-		$this->output
-			->set_header("Content-Length: ".strlen($output))
-			->set_output($output);
+		exec("/home/user/SmartLiving/libcoap-4.1.1/examples/coap-client -v7 -B2 -m GET coap://[ff02::1]/.well-known/core", $lines);
+		foreach($lines as $line) {
+			if(preg_match("/bytes from \\[(.+?)\\]/", $line, $matches)) {
+				$url = "http://[".$matches[1]."]";
+				$this->Directory_model->insert_or_update_by_url($url);
+			}
+		}
+		$this->output->set_status_header('204');
 	}
 
 	public function url_check($input) {

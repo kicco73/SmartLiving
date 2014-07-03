@@ -57,7 +57,7 @@ static driver_t driver[] = {
 };
 
 #define LED_TOGGLE_INTERVAL (CLOCK_SECOND >> 3)
-#define REGISTER_INTERVAL (CLOCK_SECOND << 7)
+#define REGISTER_INTERVAL (CLOCK_SECOND << 5)
 #define BOOT_WAIT_INTERVAL (CLOCK_SECOND * 3)
 #define BOGUS_WAIT_INTERVAL (CLOCK_SECOND >> 7)
 
@@ -217,16 +217,16 @@ PROCESS_THREAD(status_process, ev, data) {
 		switch(led_period) {
 		case 0:
 		case 2:
-			leds_on(registered? LEDS_GREEN : LEDS_RED);
+			leds_on(sizeof(driver) && registered? LEDS_GREEN : LEDS_RED);
 			break;
 		case 1:
 		case 3:
 			if(registered) {
-				leds_on(LEDS_GREEN);
+				leds_on(sizeof(driver)? LEDS_GREEN : LEDS_RED);
 				break;
 			}
 		default:
-			leds_off(LEDS_GREEN | LEDS_RED);
+			leds_off(LEDS_ALL);
 		}
 		etimer_reset(&timer);
 		led_period = (led_period + 1) % 8;

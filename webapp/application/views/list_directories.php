@@ -1,5 +1,4 @@
 <?php $this->load->view('header');?>
-
 <?php foreach($directories as $directory) { ?>
 
 <div class="container directory">
@@ -25,6 +24,17 @@
 <script>
 
 $(document).ready(function() {
+
+	$.ajaxSetup({
+	    beforeSend:function(){
+		$.blockUI();
+	    },
+    	    complete:function(){
+		$.unblockUI();
+    	    }
+	});
+
+        //$("#loading").fadeOut();
 	$(".discoverDirectories").click(directory.ajaxDiscover);
 	$(".rebuildDirectory").click(directory.ajaxRebuild);
 	$(".removeDirectory").click(directory.ajaxRemove);
