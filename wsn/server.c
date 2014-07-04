@@ -113,7 +113,6 @@ static void drivers_init() {
 
 static void client_chunk_handler(void *response) {
 	PRINTF("*** RESOURCE DIRECTORY REGISTERED!\n");
-	drivers_init();
 	registered = 1;
 }
 
@@ -159,6 +158,7 @@ PROCESS_THREAD(registration_process, ev, data) {
 	PROCESS_BEGIN();
 	PRINTF("Registration process started\n");
 	network_init();
+	drivers_init();
 	uip_ip6addr(&server_ipaddr, 0xaaaa, 0, 0, 0, 0xc30c, 0, 0, 1);
 	SENSORS_ACTIVATE(button_sensor);
 	ledoff_event = process_alloc_event();

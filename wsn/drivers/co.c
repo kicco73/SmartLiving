@@ -15,7 +15,7 @@
 #define VCC 3.3
 
 const struct sensors_sensor co_sensor;
-PERIODIC_RESOURCE(co_resource, METHOD_GET, "xco", "title=\"CO sensor\";rt=\"Text\";obs", 7*CLOCK_SECOND);
+PERIODIC_RESOURCE(co_resource, METHOD_GET, "co1", "title=\"CO sensor\";rt=\"Text\";obs", 7*CLOCK_SECOND);
 
 /*---------------------------------------------------------------------------*/
 
@@ -112,7 +112,7 @@ void co_resource_periodic_handler(resource_t *r) {
 SENSORS_SENSOR(co_sensor, "CO sensor", sensor_value, sensor_configure, sensor_status);
 
 struct Driver CO_DRIVER = {
-	.name = "xco",
+	.name = "co1",
 	.description = "CO sensor",
 	.unit = "ppm",
 	.type = "sensor",
