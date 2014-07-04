@@ -18,20 +18,26 @@ PROCESS(dimmer_set, "dimmer_set");
 
 PROCESS_THREAD(dimmer_set, event, data) {
 	static struct etimer etimer;
+	static int16_t delta = 0;
+	static char counter;
 	PROCESS_BEGIN();
 
-	etimer_set(&etimer, CLOCK_SECOND / 100);
 	while(1) {
 		PRINTF("*** WAITING FOR PUT EVENT!\n");
 		PROCESS_WAIT_EVENT_UNTIL(event == dimmer_put_event);
 		PRINTF("*** PUT EVENT!! low_aux = %u\n", low_aux);
-		while(TBCCR2 != low_aux) {
+		delta = (low_aux - TBCCR2) / 32;
+		etimer_set(&etimer, CLOCK_SECOND / 100);
+		for(counter = 32; counter; counter--) {
 			PRINTF("*** PUT EVENT!! TBCCR2 = %u\n", TBCCR2);
 			PRINTF("*** PUT EVENT!!\n");
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&etimer));
-			if(TBCCR2 < low_aux) TBCCR2++; 
-			else if(TBCCR2 > low_aux) TBCCR2--;
-			etimer_reset(&etimer);
+			if(counter-1)
+				TBCCR2 = low_aux;
+			else {
+				TBCCR2 += delta;
+				etimer_reset(&etimer);
+			}
 		}
 	}
 	PROCESS_END();
