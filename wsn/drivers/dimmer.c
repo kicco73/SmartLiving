@@ -26,18 +26,16 @@ PROCESS_THREAD(dimmer_set, event, data) {
 		PRINTF("*** WAITING FOR PUT EVENT!\n");
 		PROCESS_WAIT_EVENT_UNTIL(event == dimmer_put_event);
 		PRINTF("*** PUT EVENT!! low_aux = %u\n", low_aux);
-		delta = (low_aux - TBCCR2) / 32;
-		etimer_set(&etimer, CLOCK_SECOND / 100);
+		delta = ((int)low_aux - (int)TBCCR2) / 32;
 		for(counter = 32; counter; counter--) {
 			PRINTF("*** PUT EVENT!! TBCCR2 = %u\n", TBCCR2);
 			PRINTF("*** PUT EVENT!!\n");
+			etimer_set(&etimer, CLOCK_SECOND / 40 );
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&etimer));
 			if(counter-1)
-				TBCCR2 = low_aux;
-			else {
 				TBCCR2 += delta;
-				etimer_reset(&etimer);
-			}
+			else
+				TBCCR2 = low_aux;
 		}
 	}
 	PROCESS_END();
@@ -71,7 +69,7 @@ static void sensor_init() {
 	TBCTL = TBSSEL_1 | TBCLR; // setto il timer ACLK + Timer clean
 	TBCCTL2 = OUTMOD_3;         // setto la modalità di uscita per la soglia 1 come: Set/Reset
 	TBCTL |= MC_1;              // setto la Up Mode (TBR cresce fino al raggiungimento della soglia) per il Timer B
-	sensor_configure(period0, period0-1);  // setto il dimmer con un valore di default
+	sensor_configure(period0, period0+1);  // setto il dimmer con un valore di default
 	process_start(&dimmer_set, NULL);
 }
 
@@ -98,7 +96,7 @@ void dimmer_resource_handler(void* request, void* response, uint8_t *buffer, uin
 		const char *tmpbuf;
 		REST.get_post_variable(request, "v", &tmpbuf);
 		value = (uint16_t) atoi(tmpbuf);
-		low_aux = ((period0*(100-value))/100);
+		low_aux = ((period0*(100-value))/100)+1;
 		process_post(&dimmer_set, dimmer_put_event, NULL);
 		REST.set_response_status(response, REST.status.CHANGED);
 	} else
