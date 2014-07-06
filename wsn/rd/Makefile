@@ -4,6 +4,8 @@ all: resource_directory
 chmod:
 	sudo chmod 777 /dev/ttyUSB*
 
+upload: chmod resource_directory.upload
+
 tun:	chmod z1-reset connect-router
 
 CONTIKI=/home/user/contiki-2.7

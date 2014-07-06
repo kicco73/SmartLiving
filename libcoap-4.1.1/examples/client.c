@@ -1049,7 +1049,7 @@ main(int argc, char **argv) {
     addrptr = &dst.addr.sin6.sin6_addr;
 
     /* create context for IPv6 */
-    ctx = get_context("::", port_str);
+    ctx = get_context("aaaa::1", port_str);
     break;
   default:
     ;
