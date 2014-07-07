@@ -7,6 +7,7 @@
 #include "net/uip.h"
 #include "net/uip-ds6.h"
 #include "net/uip-debug.h"
+#include "rpl/rpl.h"
 #include "sys/etimer.h"
 #include "dev/leds.h"
 #include "dev/button-sensor.h"
@@ -58,8 +59,8 @@ static driver_t driver[] = {
 
 #define LED_TOGGLE_INTERVAL (CLOCK_SECOND >> 3)
 #define REGISTER_INTERVAL (CLOCK_SECOND << 5)
-#define BOOT_WAIT_INTERVAL (CLOCK_SECOND * 3)
 #define BOGUS_WAIT_INTERVAL (CLOCK_SECOND >> 7)
+#define RPL_WAIT_INTERVAL (CLOCK_SECOND)
 
 /*---------------------------------------------------------------------------*/
 
@@ -148,22 +149,20 @@ static void sprint_ipaddr(char *buf, const uip_ipaddr_t *addr) {
 
 PROCESS_THREAD(registration_process, ev, data) {
 	static int i;
-	static uip_ipaddr_t server_ipaddr;
+	uip_ipaddr_t null_ip;
 	static coap_packet_t request[1];
 	static char buf[256];
 	static struct etimer timer;
 	static const char* service_url = "register";
 	coap_observer_t *obs;
+	static rpl_dag_t *rpl_dag;
 
 	PROCESS_BEGIN();
 	PRINTF("Registration process started\n");
 	network_init();
 	drivers_init();
-	uip_ip6addr(&server_ipaddr, 0xaaaa, 0, 0, 0, 0xc30c, 0, 0, 1);
 	SENSORS_ACTIVATE(button_sensor);
 	ledoff_event = process_alloc_event();
-	etimer_set(&timer, BOOT_WAIT_INTERVAL);
-	PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 	while(1) {
 		registered = !sizeof(driver);
 		//process_post(&status_process, ledoff_event, NULL);
@@ -171,6 +170,15 @@ PROCESS_THREAD(registration_process, ev, data) {
 		while((obs = (coap_observer_t*)list_head(coap_get_observers())))
 			coap_remove_observer(obs);
 		PRINTF("*** REGISTERING ALL RESOURCES TO RESOURCE DIRECTORY\n");
+
+		rpl_dag = rpl_get_any_dag();
+		uip_ip6addr(&null_ip, 0, 0, 0, 0, 0, 0, 0, 0);
+		while(!rpl_dag || uip_ipaddr_cmp(&null_ip, &(rpl_dag->dag_id))) { // wait until you have at least one parent
+			etimer_set(&timer, RPL_WAIT_INTERVAL);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+			rpl_dag = rpl_get_any_dag();
+		}
+
 		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
 			sprint_ipaddr(buf, &ipaddr);
 			sprintf(buf+strlen(buf), "\n/%s\t%s\t%s", driver[i]->name, driver[i]->unit, driver[i]->type);
@@ -179,7 +187,7 @@ PROCESS_THREAD(registration_process, ev, data) {
 			coap_init_message(request, COAP_TYPE_CON, COAP_PUT, 0);
 			coap_set_header_uri_path(request, service_url);
 			coap_set_payload(request, buf, strlen(buf));
-			COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
+			COAP_BLOCKING_REQUEST(&(rpl_dag->dag_id), REMOTE_PORT, request, client_chunk_handler);
 			etimer_set(&timer, BOGUS_WAIT_INTERVAL);
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
 			if(!registered) {

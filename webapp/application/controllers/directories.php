@@ -69,7 +69,7 @@ class Directories extends CI_Controller {
 	}
 	
 	public function ajaxDiscover() {
-		exec("/home/user/SmartLiving/libcoap-4.1.1/examples/coap-client -v7 -B2 -m GET coap://[ff02::1]/.well-known/core", $lines);
+		exec(BASEPATH."../bin/coap-client -v7 -B2 -m GET coap://[ff02::1]/.well-known/core", $lines);
 		foreach($lines as $line) {
 			if(preg_match("/bytes from \\[(.+?)\\]/", $line, $matches)) {
 				$url = "http://[".$matches[1]."]";
