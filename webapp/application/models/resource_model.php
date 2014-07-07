@@ -40,7 +40,7 @@ class Resource_model extends CI_Model {
 			$resource->currentValue = $value;
 			$this->update($resource);
 			$this->db->insert('Sample', array('resourceId' => $resource->id, 'value' => $value));
-		} else log_message("resource_model.add_sample(): ".$url.": cannot find resource");
+		} else log_message("error", "resource_model.add_sample(): ".$url.": cannot find resource");
 		return count($result) > 0;
 	}
 

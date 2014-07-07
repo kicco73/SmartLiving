@@ -1,38 +1,11 @@
-/*
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the Institute nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
- */
 /**
  * \file
- *         border-router
+ *         resource_directory
  * \author
- *         Niclas Finne <nfi@sics.se>
- *         Joakim Eriksson <joakime@sics.se>
- *         Nicolas Tsiftes <nvt@sics.se>
+ *	   Enrico Carniani
+ *	   Filippo Ricci
+ *	   Ivan Belluco
+ *	   Gianluca Peterle
  */
 
 #include "contiki.h"
@@ -48,30 +21,16 @@
 #include "net/netstack.h"
 #include "dev/slip.h"
 #include "dev/leds.h"
-//#include "dev/button-sensor.h"
 #include "sys/etimer.h"
-
-#if 0
-#include "drivers/power.h"
-#include "drivers/light.h"
-#include "drivers/sound.h"
-#include "drivers/co.h"
-#include "drivers/co2.h"
-#include "drivers/fan.h"
-#include "drivers/dimmer.h"
-#include "drivers/temp.h"
-#include "drivers/motion.h"
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#define FAR __attribute__ ((section ("far_rom")))
 
-// COAP_DEFAULT_PORT = 5683
 #define REMOTE_PORT	UIP_HTONS(COAP_DEFAULT_PORT)
 
+#define HTTPD 0
 #define HTTP_ON_UPDATE 1
 
 #define MAX_NUM_RESOURCES 10
@@ -79,9 +38,8 @@
 #define LED_TOGGLE_INTERVAL CLOCK_SECOND >> 2
 
 #define DEBUG DEBUG_NONE
-#include "net/uip-debug.h"
 
-uint16_t dag_id[] = {0x1111, 0x1100, 0, 0, 0, 0, 0, 0x0011};
+#include "net/uip-debug.h"
 
 extern uip_ds6_nbr_t uip_ds6_nbr_cache[];
 extern uip_ds6_route_t uip_ds6_routing_table[];
@@ -105,25 +63,27 @@ struct resource {
 static struct resource rd[MAX_NUM_RESOURCES];
 
 PROCESS(border_router_process, "BR");
-PROCESS(webserver_nogui_process, "WS");
 PROCESS(coap_put_process, "COAP");
+
 #if HTTP_ON_UPDATE
 PROCESS(on_update_process, "HTTP");
-
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process,&coap_put_process,&on_update_process);
-#else
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
+#endif
+#if HTTPD
+PROCESS(webserver_nogui_process, "WS");
 #endif
 
 
-#if WEBSERVER==0
-/* No webserver */
-AUTOSTART_PROCESSES(&border_router_process);
-#elif WEBSERVER>1
-/* Use an external webserver application */
-#include "webserver-nogui.h"
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
-#else
+AUTOSTART_PROCESSES(
+	&border_router_process
+#if HTTPD
+	, &webserver_nogui_process
+#endif
+#if HTTP_ON_UPDATE
+	, &coap_put_process
+	, &on_update_process
+#endif
+);
+
 /* Use simple webserver with only one page for minimum footprint.
  * Multiple connections can result in interleaved tcp segments since
  * a single static buffer is used for all segments.
@@ -141,55 +101,43 @@ AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
  * TODO:use PSOCk_GENERATOR_SEND and tcp state storage to fix this.
  */
 #define WEBSERVER_CONF_ROUTE_LINKS 0
-#if WEBSERVER_CONF_ROUTE_LINKS
 #define BUF_USES_STACK 1
-#endif
-#if 0
-static driver_t driver[] = {
-#ifdef WITH_POWER_SENSOR
-	&POWER_DRIVER,
-#endif
-#ifdef WITH_LIGHT_SENSOR
-	&LIGHT_DRIVER,
-#endif
-#ifdef WITH_SOUND_SENSOR
-	&SOUND_DRIVER,
-#endif
-#ifdef WITH_CO_SENSOR
-	&CO_DRIVER,
-#endif
-#ifdef WITH_CO2_SENSOR
-	&CO2_DRIVER,
-#endif
-#ifdef WITH_FAN_SENSOR
-	&FAN_DRIVER,
-#endif
-#ifdef WITH_DIMMER_SENSOR
-	&DIMMER_DRIVER,
-#endif
-#ifdef WITH_TEMP_SENSOR
-	&TEMP_DRIVER,
-#endif
-#ifdef WITH_MOTION_SENSOR
-	&MOTION_DRIVER,
-#endif
-};
-#endif
+
+RESOURCE(register_resource, METHOD_PUT, "register", "title=\"R\";rt=\"Text\"");
 
 /*---------------------------------------------------------------------------*/
 
 static int find_resource(char *name) {
 	int i;
 	for(i=0;i<num_res;i++) {
-//		puts(rd[i].n);
 		if(!strcmp(name, rd[i].n)) 
 			return i;
 	}
 	return -1;
 }
 
-RESOURCE(register_resource, METHOD_PUT, "register", "title=\"R\";rt=\"Text\"");
+/*---------------------------------------------------------------------------*/
 
+static void sprint_ipaddr(char *buf, const uip_ipaddr_t *addr) {
+  uint16_t a;
+  unsigned int i;
+  int f = 0;
+  *buf = 0;
+  for(i = 0; i < sizeof(uip_ipaddr_t); i += 2) {
+    char *ptr = buf+strlen(buf);
+    a = (addr->u8[i] << 8) + addr->u8[i + 1];
+    if(!a && f >= 0) {
+      if(!f++)
+        strcpy(ptr, "::");
+    } else {
+      if(f > 0)
+        f = -1;
+      else if(i > 0)
+        strcpy(ptr, ":");
+      sprintf(buf+strlen(buf), "%x", a);
+    }
+  }
+}
 
 /*---------------------------------------------------------------------------*/
 
@@ -243,6 +191,55 @@ void register_resource_handler(void* request, void* response, uint8_t *buffer, u
 }
 
 /*---------------------------------------------------------------------------*/
+#if !HTTPD
+
+RESOURCE(directory_resource, METHOD_GET, "list", "title=\"R\";rt=\"Text\"");
+
+static char buf[512];
+
+void directory_resource_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+	int i; // i: place where to put the new resource
+	int32_t strpos, length;
+	
+	uint8_t method = REST.get_method_type(request);
+
+	if(method & METHOD_GET) {
+		if(!*offset) {
+			buf[0] = 0;
+			strcat(buf, "[");
+			for(i=0; i < num_res; i++) {
+				strcat(buf, "{\"a\":\"");
+				sprint_ipaddr(buf+strlen(buf), &(rd[i].address));
+				sprintf(buf+strlen(buf), 
+					"\",\"n\":\"%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",
+					rd[i].n, rd[i].v, rd[i].u, rd[i].rt, i < num_res-1? ',' : '\0');
+			}
+			strcat(buf, "]");
+		}
+		length = strlen(buf);
+  		if (*offset < 0 || *offset >= length) {
+			REST.set_response_status(response, REST.status.BAD_OPTION);
+    			/* A block error message should not exceed the minimum block size (16). */
+    			const char *error_msg = "BlockOutOfScope";
+    			REST.set_response_payload(response, error_msg, strlen(error_msg));
+		} else {
+			REST.set_header_content_type(response, REST.type.APPLICATION_JSON); 
+			REST.set_response_status(response, REST.status.OK);
+			strpos = length - *offset;
+			if(strpos > REST_MAX_CHUNK_SIZE)
+				strpos = REST_MAX_CHUNK_SIZE;
+			memcpy(buffer, buf+*offset, strpos);
+			REST.set_response_payload(response, buffer, strpos);
+			*offset = *offset + strpos;
+			if(*offset >= length)
+				*offset = -1;
+		}
+	} else
+		REST.set_response_status(response, REST.status.BAD_REQUEST);
+}
+
+/*---------------------------------------------------------------------------*/
+#else
 
 PROCESS_THREAD(webserver_nogui_process, ev, data)
 {
@@ -257,40 +254,17 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
   
   PROCESS_END();
 }
+
 /*---------------------------------------------------------------------------*/
 
-static void sprint_ipaddr(char *buf, const uip_ipaddr_t *addr) {
-  uint16_t a;
-  unsigned int i;
-  int f = 0;
-  *buf = 0;
-  for(i = 0; i < sizeof(uip_ipaddr_t); i += 2) {
-    char *ptr = buf+strlen(buf);
-    a = (addr->u8[i] << 8) + addr->u8[i + 1];
-    if(!a && f >= 0) {
-      if(!f++)
-        strcpy(ptr, "::");
-    } else {
-      if(f > 0)
-        f = -1;
-      else if(i > 0)
-        strcpy(ptr, ":");
-      sprintf(buf+strlen(buf), "%x", a);
-    }
-  }
-}
-/*---------------------------------------------------------------------------*/
-
-static
-PT_THREAD(generate_routes(struct httpd_state *s))
-{
+static PT_THREAD(generate_routes(struct httpd_state *s)) {
 	PSOCK_BEGIN(&s->sout);
 
 	static int i;
 
 	if(s->method == GET) {
 
-		if(!strcmp(s->filename, "/")) { // GET all resources
+		if(!strcmp(s->filename, "/list")) { // GET all resources
 			int max = sizeof(s->http_output_payload)-2;
 
 			// HTTP header
@@ -365,18 +339,14 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 }
 /*---------------------------------------------------------------------------*/
 
-httpd_simple_script_t
-httpd_simple_get_script(const char *name)
-{
+httpd_simple_script_t httpd_simple_get_script(const char *name) {
   return generate_routes;
 }
 
 /*---------------------------------------------------------------------------*/
 #endif /* WEBSERVER */
 
-void
-request_prefix(void)
-{
+void request_prefix(void) {
   /* mess up uip_buf with a dirty request... */
   uip_buf[0] = '?';
   uip_buf[1] = 'P';
@@ -387,9 +357,7 @@ request_prefix(void)
 
 /*---------------------------------------------------------------------------*/
 
-void
-set_prefix_64(uip_ipaddr_t *prefix_64)
-{
+void set_prefix_64(uip_ipaddr_t *prefix_64) {
   uip_ipaddr_t ipaddr;
   memcpy(&prefix, prefix_64, 16);
   memcpy(&ipaddr, prefix_64, 16);
@@ -422,8 +390,7 @@ void client_observing_handler(coap_observee_t * subject, void *notification, coa
 
 /*---------------------------------------------------------------------------*/
 
-PROCESS_THREAD(border_router_process, ev, data)
-{
+PROCESS_THREAD(border_router_process, ev, data) {
   static struct etimer et, observeETimer;
   rpl_dag_t *dag;
   static int i;
@@ -460,8 +427,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   uip_ip6addr(&dag_ip, 0xaaaa, 0, 0, 0, 0xc30c, 0, 0, 1);
 
-  dag = rpl_set_root(RPL_DEFAULT_INSTANCE,&dag_ip);
-  //dag = rpl_set_root(RPL_DEFAULT_INSTANCE,(uip_ip6addr_t *)dag_id);
+  dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &dag_ip);
   if(dag != NULL) {
     rpl_set_prefix(dag, &prefix, 64);
     //PRINTF("created a new RPL dag\n");
@@ -483,7 +449,9 @@ PROCESS_THREAD(border_router_process, ev, data)
 	// Initialize REST server and REST resources
 	rest_init_engine();
 	rest_activate_event_resource(&resource_register_resource);
-
+#if !HTTPD
+	rest_activate_event_resource(&resource_directory_resource);
+#endif
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&observeETimer));
 #if 1
@@ -534,8 +502,7 @@ static void client_put_handler(void *response) {
 
 /*---------------------------------------------------------------------------*/
 
-PROCESS_THREAD(coap_put_process, ev, data)
-{
+PROCESS_THREAD(coap_put_process, ev, data) {
 	PROCESS_BEGIN();
 
 	static char buf[16];
@@ -558,9 +525,9 @@ PROCESS_THREAD(coap_put_process, ev, data)
 }
 
 #if HTTP_ON_UPDATE
+
 void handle_request(struct psock *ps, struct resource *r) {
 		PSOCK_BEGIN(ps);
-
 		static char buf[128];
 		char buf2[128];
 		sprintf(buf2, "[{\"n\":\"%s\",\"v\":%s}]", r->n, r->v);
@@ -570,7 +537,6 @@ void handle_request(struct psock *ps, struct resource *r) {
 		SEND_STRING(ps, buf);
 
 		PSOCK_CLOSE(&ps);
-
 		PSOCK_END(ps);
 }
 
@@ -604,27 +570,3 @@ PROCESS_THREAD(on_update_process, ev, data)
 #endif
 
 /*---------------------------------------------------------------------------*/
-#if 0
-PROCESS_THREAD(button_on_update_process, ev, data) {
-	static int i;
-	static struct etimer timer;
-	PROCESS_BEGIN();
-	SENSORS_ACTIVATE(button_sensor);
-	PRINTF("Button process started\n");
-	while(1) {
-		PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &button_sensor);
-		PRINTF("*** FORCING DELIVERY OF ALL RESOURCES\n");
-		leds_on(LEDS_RED);
-
-		for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
-			PRINTF("%s: forcing notification\n", driver[i]->name);
-			driver[i]->notify();
-		}
-
-		etimer_set(&timer, CLOCK_SECOND >> 1);
-		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
-		leds_off(LEDS_RED);
-	}
-	PROCESS_END();
-}
-#endif

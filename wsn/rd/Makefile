@@ -8,6 +8,8 @@ upload: chmod resource_directory.upload
 
 tun:	chmod z1-reset connect-router
 
+tuna: tun
+
 CONTIKI=/home/user/contiki-2.7
 
 WITH_UIP6=1

@@ -4,11 +4,11 @@ class Directories extends CI_Controller {
 
 	const IO_TIMEOUT = 10.0;	// Seconds to wait before network timeout
 	
-	private function __rpc($url, $method="GET", $user_agent="Mozilla (5.0)") {
+	private function __http_rpc($url, $method="GET", $user_agent="Mozilla (5.0)") {
 		$info = false;
 		$opts = array(
   			'http'=>array(
-				'timeout' => Directories::IO_TIMEOUT,
+				'timeout' => Resources::IO_TIMEOUT,
  			    'method'=>$method,
  			    'header'=> "User-agent: $user_agent"
  			 )
@@ -28,13 +28,43 @@ class Directories extends CI_Controller {
   		return $info;
 	}
 
+	private function __coap_rpc($url, $method="GET", $value=null, $timeout=2) {
+		$info = false;
+		$descriptorspec = array(
+  			0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+   			1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+   			2 => array("file", "/dev/null", "a") // stderr is a file to write to
+		);
+		$process = proc_open(BASEPATH."../bin/coap-client -b0 -v0 -B".$timeout." -f- -m ".$method.' "'.$url.'"', $descriptorspec, $pipes);
+		if($value != null)
+			fwrite($pipes[0], $value);
+		fclose($pipes[0]);
+		$lines = stream_get_contents($pipes[1]);
+		fclose($pipes[1]);
+		proc_close($process);
+		$info = trim($lines);
+		if ($info != false && mb_detect_encoding($info, 'UTF-8', true) === false)
+    			$info = utf8_encode($info);
+  		return $info;
+	}
+
 	private function _restPut($path, $value) {
-		return $this->__rpc($path."?v=".$value, "PUT") !== false;
+		$rv = strpos($path, "coap:") == 0? $this->__coap_rpc($path, "PUT", "v=".$value) : $this->__http_rpc($path."?v=".$value, "PUT");
+		return $rv !== false;
 	}
 	
-	private function _restGet($path) {
-		$rv = $this->__rpc($path);
-		return $rv == false? false : json_decode($rv);
+	private function _restGet($path, $timeout) {
+		$rv = strpos($path, "coap:") == 0? $this->__coap_rpc($path, "GET", null, $timeout) : $this->__http_rpc($path);
+		if($rv == false)
+			return false;
+		log_message("error", "RESTGET: ".$rv);
+		$rv = json_decode($rv);
+		if(is_numeric($rv)) {
+			$v = $rv;
+			$rv = new stdClass();
+			$rv->v = $v;
+		}
+		return $rv;
 	}
 
 	public function index() {
@@ -45,7 +75,7 @@ class Directories extends CI_Controller {
 	public function ajaxRebuild($id) {
 		$directory = $this->Directory_model->get($id);
 		$b = $directory->url;
-		$rv = $this->_restGet($b."/");
+		$rv = $this->_restGet($b."/list", 10);
 		if($rv != false) {
 			foreach($rv as $r) {
 				$board = $this->Board_model->insert_or_update_by_directory_and_url($id, $r->a);
@@ -71,10 +101,23 @@ class Directories extends CI_Controller {
 	}
 	
 	public function ajaxDiscover() {
-		exec(BASEPATH."../bin/coap-client -v7 -B2 -m GET coap://[ff02::1%tun0]/.well-known/core", $lines);
+		$descriptorspec = array(
+  			0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+   			1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+   			2 => array("pipe", "w") // stderr is a file to write to
+		);
+		$process = proc_open(BASEPATH."../bin/coap-client -v7 -B2 -m GET coap://[ff02::1%tun0]/.well-known/core", $descriptorspec, $pipes);
+		fclose($pipes[0]);
+		$lines = stream_get_contents($pipes[2]);
+		fclose($pipes[1]);
+		fclose($pipes[2]);
+		proc_close($process);
+		log_message("error", "XXX GUARDA CHE HO: ".$lines);
+		$lines = explode("\n", $lines);
 		foreach($lines as $line) {
+			log_message("error", "GUARDA CHE HO: ".$line);
 			if(preg_match("/bytes from \\[(.+?)\\]/", $line, $matches)) {
-				$url = "http://[".$matches[1]."]";
+				$url = "coap://[".$matches[1]."]";
 				$this->Directory_model->insert_or_update_by_url($url);
 			}
 		}
@@ -87,9 +130,9 @@ class Directories extends CI_Controller {
 	
 	public function ajaxAdd() {
 		$url = $this->input->post('url', TRUE);
-		$ok = preg_match("/^http:\/(\/[^\/]+)+$/i", $url, $matches);
+		$ok = preg_match("/^(http|coap):\/(\/[^\/]+)+$/i", $url, $matches);
 		if(!$ok) {
-			$this->output->set_status_header('500', "field must be in the form http://hostname/path");
+			$this->output->set_status_header('500', "field must be in the form {http|coap}://hostname/path");
 		} else {
 			$id = $this->Directory_model->insert_or_update_by_url($url);
 			$this->ajaxRefresh($id);

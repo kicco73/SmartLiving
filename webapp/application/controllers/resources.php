@@ -42,10 +42,7 @@ class Resources extends CI_Controller {
 		$lines = stream_get_contents($pipes[1]);
 		fclose($pipes[1]);
 		proc_close($process);
-		$line = trim($lines);
-		if(preg_match("/\n(.*)$/", $line, $matches))
-			$info = $matches[1];
-		else $info = "";
+		$info = trim($lines);
 		if ($info != false && mb_detect_encoding($info, 'UTF-8', true) === false)
     			$info = utf8_encode($info);
   		return $info;

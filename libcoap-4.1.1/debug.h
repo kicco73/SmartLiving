@@ -12,7 +12,7 @@
 #include "config.h"
 
 #ifndef COAP_DEBUG_FD
-#define COAP_DEBUG_FD stdout
+#define COAP_DEBUG_FD stderr
 #endif
 
 #ifndef COAP_ERR_FD
