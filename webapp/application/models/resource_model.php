@@ -34,13 +34,13 @@ class Resource_model extends CI_Model {
 	}
 	
 	function add_sample($url, $value) {
-		$result = $this->db->where('url', $url)->get(Resource_model::TABLENAME)->result();
+		$result = $this->db->like('url', $url, 'before')->get(Resource_model::TABLENAME)->result();
 		if(count($result) > 0) {
 			$resource = $result[0];
 			$resource->currentValue = $value;
 			$this->update($resource);
 			$this->db->insert('Sample', array('resourceId' => $resource->id, 'value' => $value));
-		} 
+		} else log_message("resource_model.add_sample(): ".$url.": cannot find resource");
 		return count($result) > 0;
 	}
 
