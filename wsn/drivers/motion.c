@@ -7,13 +7,13 @@
 #include "net/uip-debug.h"
 #include "motion.h"
 
-#define INPUT_CHANNEL      (1 << INCH_0)
+#define INPUT_CHANNEL      (1 << 7)
 #define INPUT_REFERENCE    SREF_1
-#define MOTION_MEM    ADC12MEM1
+#define MOTION_MEM    ADC12MEM7
 
 const struct sensors_sensor motion_sensor;
 
-PERIODIC_RESOURCE(motion_resource, METHOD_GET, "motion", "title=\"motion sensor\";rt=\"Text\";obs", 5*CLOCK_SECOND);
+PERIODIC_RESOURCE(motion_resource, METHOD_GET, "motion", "title=\"motion sensor\";rt=\"Text\";obs", 1*CLOCK_SECOND);
 /*---------------------------------------------------------------------------*/
 
 static void sensor_init() {
@@ -60,7 +60,9 @@ void motion_resource_periodic_handler(resource_t *r) {
 	static int event_counter;
 	char buffer[16];
 	PRINTF("*** motion_resource_periodic_handler(): called!\n");
-	sprintf(buffer, "%d", 200*sensor_value(0));
+	int value = 4095-sensor_value(0);
+	sprintf(buffer, "%d", value);
+	printf("misura presenza: %d\n",value);
 	coap_packet_t notification[1];
 	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
@@ -76,7 +78,7 @@ SENSORS_SENSOR(motion_sensor, "motion", sensor_value, sensor_configure, sensor_s
 struct Driver MOTION_DRIVER = {
 	.name = "motion",
 	.description = "motion sensor",
-	.unit = "on/off",
+	.unit = "V",
 	.type = "sensor",
 	.init = sensor_init, 
 };

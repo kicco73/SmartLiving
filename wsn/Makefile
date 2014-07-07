@@ -30,6 +30,10 @@ board2: drivers/sound.o drivers/fan.o drivers/light.o drivers/temp.o
 board3: drivers/power.o drivers/dimmer.o drivers/motion.o
 	make TARGET=z1 SENSORS="$(SENSORS) -DWITH_POWER_SENSOR -Wl,drivers/power.o -DWITH_DIMMER_SENSOR -Wl,drivers/dimmer.o -DWITH_MOTION_SENSOR -Wl,drivers/motion.o" all
 
+board44: drivers/motion.o
+	make TARGET=z1 SENSORS="$(SENSORS)  -DWITH_MOTION_SENSOR -Wl,drivers/motion.o" all
+
+
 board4: drivers/co.o drivers/co2.o
 	make TARGET=sky SENSORS="$(SENSORS) -DWITH_CO_SENSOR -Wl,drivers/co.o -DWITH_CO2_SENSOR -Wl,drivers/co2.o" all
 
