@@ -7,7 +7,7 @@ var observe = {
   	observe.pause();
     var n = $(observe.selector).length;
     $(observe.selector).each(function() {
-    	var div = $(this);
+		var div = $(this);
 		var rel = div.attr("rel");
 		console.log("*** Observe: refreshing "+rel);
 		$.ajax("/directories/ajaxRefresh/"+rel)
@@ -192,10 +192,14 @@ $(document).ready(function() {
 
 	$.ajaxSetup({
 	    beforeSend: function() {
-		timer = setTimeout($.blockUI, 100);
+		if(timer)
+			clearTimeout(timer); 
+		timer = setTimeout($.blockUI, 120);
 	    },
     	    complete: function() {
-		clearTimeout(timer);
+		if(timer)
+			clearTimeout(timer);
+		timer = null;
 		$.unblockUI();
     	    }
 	});
