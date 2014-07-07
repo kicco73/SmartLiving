@@ -402,7 +402,8 @@ PROCESS_THREAD(border_router_process, ev, data)
   static struct etimer et, observeETimer;
   rpl_dag_t *dag;
   static int i;
-	static char led_period = 0;
+  static char led_period = 0;
+  static uip_ipaddr_t dag_ip;
 
   PROCESS_BEGIN();
 
@@ -432,7 +433,10 @@ PROCESS_THREAD(border_router_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
 
-  dag = rpl_set_root(RPL_DEFAULT_INSTANCE,(uip_ip6addr_t *)dag_id);
+  uip_ip6addr(&dag_ip, 0xaaaa, 0, 0, 0, 0xc30c, 0, 0, 1);
+
+  dag = rpl_set_root(RPL_DEFAULT_INSTANCE,&dag_ip);
+  //dag = rpl_set_root(RPL_DEFAULT_INSTANCE,(uip_ip6addr_t *)dag_id);
   if(dag != NULL) {
     rpl_set_prefix(dag, &prefix, 64);
     //PRINTF("created a new RPL dag\n");
@@ -454,12 +458,6 @@ PROCESS_THREAD(border_router_process, ev, data)
 	// Initialize REST server and REST resources
 	rest_init_engine();
 	rest_activate_event_resource(&resource_register_resource);
-#if 0
-	for(i = 0; i < sizeof(driver)/sizeof(driver_t); i++) {
-		PRINTF("%s: initializing driver\n", driver[i]->name);
-		driver[i]->init();
-	}
-#endif
 
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&observeETimer));
