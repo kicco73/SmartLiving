@@ -61,8 +61,7 @@ void motion_resource_periodic_handler(resource_t *r) {
 	char buffer[16];
 	PRINTF("*** motion_resource_periodic_handler(): called!\n");
 	int value = 4095-sensor_value(0);
-	sprintf(buffer, "%d", value);
-	printf("misura presenza: %d\n",value);
+	sprintf(buffer, "%ld", sensor_value(0));
 	coap_packet_t notification[1];
 	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
@@ -78,7 +77,7 @@ SENSORS_SENSOR(motion_sensor, "motion", sensor_value, sensor_configure, sensor_s
 struct Driver MOTION_DRIVER = {
 	.name = "motion",
 	.description = "motion sensor",
-	.unit = "V",
+	.unit = "MPI",
 	.type = "sensor",
 	.init = sensor_init, 
 };
