@@ -1,3 +1,6 @@
+<div class="boards">
+<?php foreach($boards as $board) { ?>
+		<h3>Board: <?php echo $board->url; ?></h3>
 		<table class="new resources">
 			<thead>
 				<th class="value"></th>
@@ -8,7 +11,7 @@
 			<tbody>
 		<?php
 		$i = 0;
-		foreach($resources as $resource) {
+		foreach($this->Resource_model->list_by_board($board->id) as $resource) {
 			echo '<tr class="resource '.($i % 2? 'odd' : 'even').'">';
 			echo '<td class="value">';
 			switch($resource->resType) {
@@ -39,6 +42,8 @@
 
 			</tbody>			
 		</table>
+<?php } ?>
+</div>
 
 <script>
 

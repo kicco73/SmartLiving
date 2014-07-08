@@ -5,7 +5,7 @@ class Resource_model extends CI_Model {
 	
 	var $fields = array(
 			//'id',
-			'url', 'name', 'description', 'resType', 'unit', 'currentValue', 'timestamp', 'directoryId'
+			'url', 'name', 'description', 'resType', 'unit', 'currentValue', 'timestamp', 'boardId'
 	);
 
 	function get($id) {
@@ -21,8 +21,12 @@ class Resource_model extends CI_Model {
 		return $this->db->get(Resource_model::TABLENAME)->result();
 	}
 		
+	function list_by_board($boardId) {
+		return $this->db->where("boardId", $boardId)->get(Resource_model::TABLENAME)->result();
+	}
+		
 	function list_by_directory($directoryId) {
-		return $this->db->where("directoryId", $directoryId)->get(Resource_model::TABLENAME)->result();
+		return $this->db->join("Board", "Board.id = boardId")->where("directoryId", $directoryId)->get(Resource_model::TABLENAME)->result();
 	}
 		
 	function list_all_samples($id) {
@@ -44,22 +48,22 @@ class Resource_model extends CI_Model {
 		return $this->db->where('resourceId', $id)->count_all_results("Sample");
 	}
 
-	function insert_or_update_by_url($directoryId, $url, $value, $unit, $type) {
+	function insert_or_update_by_board_and_url($boardId, $url, $value, $unit, $type) {
 		$result = $this->db->where('url', $url)->get(Resource_model::TABLENAME)->result();
 		if(count($result) > 0) {
 			$resource = $result[0];
 			$resource->currentValue = $value;
 			$resource->unit = $unit;
 			$resource->resType = $type;
-			$resource->directoryId = $directoryId;
+			$resource->boardId = $boardId;
 			$this->update($resource);
 		} else
 			$this->db->insert(Resource_model::TABLENAME, 
-				array('directoryId' => $directoryId,
+				array('boardId' => $boardId,
 					  'url' => $url, 'currentValue' => $value, 
 					  'unit' => $unit, 'resType' => $type));
 	}
-	
+
 	function delete($id) {
 		$this->db->where('id', $id)->delete(Resource_model::TABLENAME); 
 	}

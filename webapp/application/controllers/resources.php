@@ -45,7 +45,8 @@ class Resources extends CI_Controller {
 	private function getUrl($resource) {
 		$url = $resource->url;
 		if(strpos($url, "http:") !== 0) {
-			$directory = $this->Directory_model->get($resource->directoryId);
+			$board = $this->Board_model->get($resource->boardId);
+			$directory = $this->Directory_model->get($board->directoryId);
 			$url = $directory->url.$url;
 		}
 		return $url;

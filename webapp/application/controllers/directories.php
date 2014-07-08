@@ -47,10 +47,12 @@ class Directories extends CI_Controller {
 		$b = $directory->url;
 		$rv = $this->_restGet($b."/");
 		if($rv != false) {
-			foreach($rv as $r) 
-				$this->Resource_model->insert_or_update_by_url($id, $r->n, $r->v, $r->u, $r->rt);
-			$resources = $this->Resource_model->list_by_directory($id);
-			$this->load->view('ajax_list_resources', array("resources" => $resources));
+			foreach($rv as $r) {
+				$board = $this->Board_model->insert_or_update_by_directory_and_url($id, $r->a);
+				$this->Resource_model->insert_or_update_by_board_and_url($board->id, $r->n, $r->v, $r->u, $r->rt);
+			}
+			$boards = $this->Board_model->list_by_directory($id);
+			$this->load->view('ajax_list_resources', array("boards" => $boards));
 		} else {
 			log_message('error', 'resource directory unreachable');
 			$this->output->set_status_header('500', 'resource directory unreachable');
@@ -58,8 +60,8 @@ class Directories extends CI_Controller {
 	}
 	
 	public function ajaxRefresh($id) {
-		$resources = $this->Resource_model->list_by_directory($id);
-		$this->load->view('ajax_list_resources', array("resources" => $resources));
+		$boards = $this->Board_model->list_by_directory($id);
+		$this->load->view('ajax_list_resources', array("boards" => $boards));
 	}
 	
 	public function ajaxRemove($id) {
@@ -116,9 +118,9 @@ class Directories extends CI_Controller {
 			if($n == "/") {
 				// Read whole resource directory
 				$rv = array(
-					array("n" => "/fan", "v" => 0.0, "u" => "", "rt" => "switch"),
-					array("n" => "/light", "v" => 0.0, "u" => "lux", "rt" => "dimmer"),
-					array("n" => "/accelerometer", "v" => 0.0, "u" => "m/s^2", "rt" => "sensor")
+					array("n" => "/fan", "v" => 0.0, "u" => "", "rt" => "switch", "a" => "aaaa::1"),
+					array("n" => "/light", "v" => 0.0, "u" => "lux", "rt" => "dimmer", "a" => "aaaa::1"),
+					array("n" => "/accelerometer", "v" => 0.0, "u" => "m/s^2", "rt" => "sensor", "a" => "aaaa::2")
 				);
 			} else 
 				// Read just one value

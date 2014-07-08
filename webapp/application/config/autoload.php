@@ -109,7 +109,7 @@ $autoload['language'] = array();
 |
 */
 
-$autoload['model'] = array('Directory_model', 'Resource_model');
+$autoload['model'] = array('Directory_model', 'Resource_model', 'Board_model');
 
 
 /* End of file autoload.php */
