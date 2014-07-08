@@ -34,16 +34,23 @@ CREATE TABLE `Directory` (
   UNIQUE KEY `url` (`url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-LOCK TABLES `Directory` WRITE;
-/*!40000 ALTER TABLE `Directory` DISABLE KEYS */;
+# Dump of table Board
+# ------------------------------------------------------------
 
-INSERT INTO `Directory` (`id`, `url`, `description`, `name`)
-VALUES
-	(12,'http://localhost:8888/directories/fake_rd','','');
+DROP TABLE IF EXISTS `Board`;
 
-/*!40000 ALTER TABLE `Directory` ENABLE KEYS */;
-UNLOCK TABLES;
-
+CREATE TABLE `Board` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `description` varchar(255) NOT NULL DEFAULT '',
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `url` varchar(255) NOT NULL DEFAULT '',
+  `directoryId` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `url` (`url`),
+  KEY `directoryId` (`directoryId`),
+  CONSTRAINT `board_ibfk_1` FOREIGN KEY (`directoryId`) REFERENCES `Directory` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 # Dump of table Resource
 # ------------------------------------------------------------
@@ -59,24 +66,13 @@ CREATE TABLE `Resource` (
   `unit` varchar(32) NOT NULL DEFAULT '',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `url` varchar(255) NOT NULL DEFAULT '',
-  `directoryId` int(11) unsigned NOT NULL,
+  `boardId` int(11) unsigned NOT NULL,
+  `address` varchar(64) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `url` (`url`),
-  KEY `directoryId` (`directoryId`),
-  CONSTRAINT `resource_ibfk_1` FOREIGN KEY (`directoryId`) REFERENCES `Directory` (`id`) ON DELETE CASCADE
+  KEY `boardId` (`boardId`),
+  CONSTRAINT `resource_ibfk_1` FOREIGN KEY (`boardId`) REFERENCES `Board` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-LOCK TABLES `Resource` WRITE;
-/*!40000 ALTER TABLE `Resource` DISABLE KEYS */;
-
-INSERT INTO `Resource` (`id`, `name`, `description`, `currentValue`, `resType`, `unit`, `timestamp`, `url`, `directoryId`)
-VALUES
-	(23,'','',0.000,'switch','','2014-06-19 21:43:25','/fan',12),
-	(25,'','',0.000,'sensor','m/s^2','2014-06-19 21:43:25','/accelerometer',12),
-	(26,'','',0.000,'dimmer','lux','2014-06-19 21:55:10','/light',12);
-
-/*!40000 ALTER TABLE `Resource` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 # Dump of table Sample
@@ -93,21 +89,6 @@ CREATE TABLE `Sample` (
   KEY `resourceId` (`resourceId`),
   CONSTRAINT `sample_ibfk_1` FOREIGN KEY (`resourceId`) REFERENCES `Resource` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-LOCK TABLES `Sample` WRITE;
-/*!40000 ALTER TABLE `Sample` DISABLE KEYS */;
-
-INSERT INTO `Sample` (`id`, `resourceId`, `value`, `timeStamp`)
-VALUES
-	(1,25,0.100,'2014-06-19 21:48:45'),
-	(2,25,0.100,'2014-06-19 21:48:47'),
-	(3,25,0.100,'2014-06-19 21:48:48'),
-	(4,25,0.100,'2014-06-19 21:48:48'),
-	(5,25,0.120,'2014-06-19 21:48:54');
-
-/*!40000 ALTER TABLE `Sample` ENABLE KEYS */;
-UNLOCK TABLES;
-
 
 
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;

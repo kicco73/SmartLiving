@@ -12,7 +12,7 @@ var observe = {
 		console.log("*** Observe: refreshing "+rel);
 		$.ajax("/directories/ajaxRefresh/"+rel)
 			.done(function(data) {
-				div.closest(".directory").find(".resources").replaceWith(data);
+				div.closest(".directory").find(".boards").replaceWith(data);
 			})
 			.always(function(x) {
 				n -= 1;
@@ -136,7 +136,7 @@ var directory = {
 	observe.pause();
 	$.ajax("/directories/ajaxRebuild/"+rel)
 		.done(function(data) {
-			div.closest(".directory").find(".resources").replaceWith(data);
+			div.closest(".directory").find(".boards").replaceWith(data);
 		}).fail(function(x) {
 			alert("Cannot rebuild resource directory");
 		}).always(function() {
