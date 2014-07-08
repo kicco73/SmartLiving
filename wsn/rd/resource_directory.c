@@ -216,9 +216,9 @@ void register_resource_handler(void* request, void* response, uint8_t *buffer, u
 
 		// Resource already present, then overwrite
 		i = find_resource(new_resource.n);
-		printf("S:'%s'\n", new_resource.n);
+		//printf("S:'%s'\n", new_resource.n);
 		if(i == -1) {
-			printf("N:%s\n", new_resource.n);
+			//printf("N:%s\n", new_resource.n);
 			// Not enough space in memory for this new resource
 			if(num_res == MAX_NUM_RESOURCES) {
 				REST.set_response_status(response, REST.status.SERVICE_UNAVAILABLE);
@@ -259,6 +259,28 @@ PROCESS_THREAD(webserver_nogui_process, ev, data)
 }
 /*---------------------------------------------------------------------------*/
 
+static void sprint_ipaddr(char *buf, const uip_ipaddr_t *addr) {
+  uint16_t a;
+  unsigned int i;
+  int f = 0;
+  *buf = 0;
+  for(i = 0; i < sizeof(uip_ipaddr_t); i += 2) {
+    char *ptr = buf+strlen(buf);
+    a = (addr->u8[i] << 8) + addr->u8[i + 1];
+    if(!a && f >= 0) {
+      if(!f++)
+        strcpy(ptr, "::");
+    } else {
+      if(f > 0)
+        f = -1;
+      else if(i > 0)
+        strcpy(ptr, ":");
+      sprintf(buf+strlen(buf), "%x", a);
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+
 static
 PT_THREAD(generate_routes(struct httpd_state *s))
 {
@@ -272,15 +294,20 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 			int max = sizeof(s->http_output_payload)-2;
 
 			// HTTP header
-			SEND_STRING(&s->sout, num_res ? HTTP_HEADER_200 : HTTP_HEADER_200 "[]");
+			strcpy(s->http_output_payload, HTTP_HEADER_200);
+			if(!num_res)
+				strcpy(s->http_output_payload+strlen(s->http_output_payload), "[]");
+			SEND_STRING(&s->sout, s->http_output_payload);
 			//SEND_STRING(&s->sout, HTTP_CONTENT_TYPE_JSON);
 
 			// HTTP payload
 			//SEND_STRING(&s->sout, "[");
 			for(i=0; i < num_res; i++) {
-			strcpy(s->http_output_payload, i? "": "[");
+				strcpy(s->http_output_payload, i? "": "[");
+				strcpy(s->http_output_payload+strlen(s->http_output_payload), "{\"a\":\"");
+				sprint_ipaddr(s->http_output_payload+strlen(s->http_output_payload), &(rd[i].address));
 				sprintf(s->http_output_payload+strlen(s->http_output_payload), 
-					"{\"n\":\"%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",
+					"\",\"n\":\"%s\",\"v\":%s,\"u\":\"%s\",\"rt\":\"%s\"}%c",
 					rd[i].n, rd[i].v, rd[i].u, rd[i].rt, i < num_res-1? ',' : ']');
 				SEND_STRING(&s->sout, s->http_output_payload);
 			}
@@ -290,12 +317,12 @@ PT_THREAD(generate_routes(struct httpd_state *s))
 			//printf("G: %s, %d\n", s->filename, i);
 			if(i != -1) {
 				// HTTP header
-				SEND_STRING(&s->sout, HTTP_HEADER_200);
+				//SEND_STRING(&s->sout, HTTP_HEADER_200);
 				//SEND_STRING(&s->sout, HTTP_CONTENT_TYPE_JSON);
 
 				// HTTP payload
-				sprintf(s->http_output_payload,"{\"n\":\"%s\",\"v\":%s}",rd[i].n,rd[i].v);
-				SEND_STRING(&s->sout, s->http_output_payload);
+				sprintf(s->http_output_payload,"%s{\"n\":\"%s\",\"v\":%s}",HTTP_HEADER_200, rd[i].n,rd[i].v);	
+			SEND_STRING(&s->sout, s->http_output_payload);
 			} else {
 				// HTTP header
 				SEND_STRING(&s->sout, HTTP_HEADER_404);
@@ -385,8 +412,6 @@ void client_observing_handler(coap_observee_t * subject, void *notification, coa
 
 		i = find_resource(buf);
 		len = coap_get_payload(notification, &chunk);
-		puts("payl");
-		puts(chunk);
 		strncpy(rd[i].v, chunk, sizeof(rd[i].v)-1);
 		rd[i].v[sizeof(rd[i].v)-1] = 0;
 #if HTTP_ON_UPDATE
@@ -481,7 +506,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 					COAP_BLOCKING_REQUEST(&(rd[i].address), REMOTE_PORT, request, client_put_handler);*/
 					
 					coap_obs_request_registration(&(rd[i].address), REMOTE_PORT, (rd[i].n)+1, client_observing_handler, NULL);
-					printf("o4 %s\n", rd[i].n);
+					//printf("o4 %s\n", rd[i].n);
 					to_observe[i] = 0;
 				}
 			}
@@ -514,7 +539,6 @@ PROCESS_THREAD(coap_put_process, ev, data)
 	PROCESS_BEGIN();
 
 	static char buf[16];
-	static int i;
 	
 	while(1) {
 		PROCESS_WAIT_EVENT_UNTIL(ev == put_event);
@@ -525,7 +549,6 @@ PROCESS_THREAD(coap_put_process, ev, data)
 		coap_set_payload(request, buf, strlen(buf));
 //		puts("a:");
 		uip_debug_ipaddr_print(&(r->address));
-		printf("\ni:%d\n", i);
 //		puts(rd[put_resource_idx].n+1);
 //		puts(buf);
 		COAP_BLOCKING_REQUEST(&(r->address), REMOTE_PORT, request, client_put_handler);

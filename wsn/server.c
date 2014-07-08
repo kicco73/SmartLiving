@@ -126,20 +126,19 @@ static void sprint_ipaddr(char *buf, const uip_ipaddr_t *addr) {
   }
   uint16_t a;
   unsigned int i;
-  int f;
-  buf[0] = 0;
-  for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
+  int f = 0;
+  *buf = 0;
+  for(i = 0; i < sizeof(uip_ipaddr_t); i += 2) {
+    char *ptr = buf+strlen(buf);
     a = (addr->u8[i] << 8) + addr->u8[i + 1];
-    if(a == 0 && f >= 0) {
-      if(f++ == 0) {
-        strcat(buf, "::");
-      }
+    if(!a && f >= 0) {
+      if(!f++)
+        strcpy(ptr, "::");
     } else {
-      if(f > 0) {
+      if(f > 0)
         f = -1;
-      } else if(i > 0) {
-        strcat((char*)buf, ":");
-      }
+      else if(i > 0)
+        strcpy(ptr, ":");
       sprintf(buf+strlen(buf), "%x", a);
     }
   }

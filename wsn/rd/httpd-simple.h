@@ -63,7 +63,7 @@ typedef char (* httpd_simple_script_t)(struct httpd_state *s);
 
 struct httpd_state {
   //char *http_header;
-  char http_output_payload[64];
+  char http_output_payload[96];
   int method;
   struct timer timer;
   struct psock sin, sout;
