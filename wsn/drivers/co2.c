@@ -5,14 +5,13 @@
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
 #include "co2.h"
-#define INPUT_CHANNEL ((1 << INCH_3) | (1 << INCH_4) | (1 << INCH_5))
+#define INPUT_CHANNEL (1 << INCH_3) 
 #define INPUT_REFERENCE SREF_1
 #define CO2_MEM ADC12MEM3
 #define CO2 1
 
 #define RL 20000
 #define R0 880000
-#define VCC 3.3
 
 const struct sensors_sensor co2_sensor;
 PERIODIC_RESOURCE(co2_resource, METHOD_GET, "co2", "title=\"CO2 sensor\";rt=\"Text\";obs", 9*CLOCK_SECOND);
@@ -47,20 +46,11 @@ static int sensor_configure(int type, int c) {
 /*---------------------------------------------------------------------------*/
 
 static void read_co2(char* buf){
-/*static int co2;
-static float co2_volt;
-static float co2_ppm;
-
-co2=sensor_value(0);
-co2_volt=co2/4095.0*VCC;
-co2_ppm=co2_volt*1000-200;
-sprintf(buf,"%d",co2_ppm);
-}*/
 
 static uint32_t co2_1000;
 
-co2_1000=1000*sensor_value(0);//valore misurato x 1000
-sprintf(buf,"%d",((co2_1000*3300)/4095-200000)/1000);
+co2_1000=sensor_value(0);//valore misurato x 1000
+sprintf(buf,"%d",((co2_1000*2500)/4095));	
 }
 
 /*---------------------------------------------------------------------------*/

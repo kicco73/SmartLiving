@@ -5,17 +5,18 @@
 #include "lib/sensors.h"
 #include "dev/sky-sensors.h"
 #include "co.h"
-#define INPUT_CHANNEL ((1 << INCH_3) | (1 << INCH_4) | (1 << INCH_5))
+#define INPUT_CHANNEL  1 << INCH_5
 #define INPUT_REFERENCE SREF_1
 #define CO_MEM ADC12MEM5
 #define CO 0
 
 #define RL 20000
 #define R0 880000
-#define VCC 3.3
 
 const struct sensors_sensor co_sensor;
 PERIODIC_RESOURCE(co_resource, METHOD_GET, "co1", "title=\"CO sensor\";rt=\"Text\";obs", 7*CLOCK_SECOND);
+
+static unsigned int co;
 
 /*---------------------------------------------------------------------------*/
 
@@ -44,29 +45,11 @@ static int sensor_configure(int type, int c) {
 
 /*---------------------------------------------------------------------------*/
 
-
-/*static void read_co(char *buf){
-
-static unsigned int co;
-static uint32_t co_volt;
-static unsigned int rs;
-static unsigned int sensitivity;
-	co=sensor_value(0);
-	co_volt = co*5/8190;
- 	rs = RL*VCC/co_volt - RL;
-   	sensitivity = rs/R0;
-	if (sensitivity>0.8) sprintf(buf,"%d",100);
-	else if (sensitivity>0.5)
-		sprintf(buf,"%d%d", (int)((-300*sensitivity)+250),(int)(((-300*sensitivity)+250)-(int)(-300*sensitivity+250))*100);
-	else sprintf(buf, "%d%d",(int)(-3600*sensitivity+1900),(int)((-3600*sensitivity+1900)-(int)(-3600*sensitivity+1900))*100);
-}
-*/
-
 static void read_co(char *buf){
-static unsigned int co;
 static uint32_t sens_1000;
 	
-   	sens_1000 = 122850/co; //-227;  // ho moltiplicato per 1000
+	co=sensor_value(0);
+   	sens_1000 = 122850/co;  // ho moltiplicato per 1000
 	if (sens_1000>800) sprintf(buf,"%d",100);
 	else if (sens_1000>500)
 		sprintf(buf,"%lu", (uint32_t)((-300*sens_1000)+250000)/1000);

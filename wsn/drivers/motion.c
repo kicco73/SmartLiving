@@ -61,7 +61,8 @@ void motion_resource_periodic_handler(resource_t *r) {
 	char buffer[16];
 	PRINTF("*** motion_resource_periodic_handler(): called!\n");
 	int value = 4095-sensor_value(0);
-	sprintf(buffer, "%ld", sensor_value(0));
+	PRINTF("%d", value);
+	sprintf(buffer, "%d", value);
 	coap_packet_t notification[1];
 	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
