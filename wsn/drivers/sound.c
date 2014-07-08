@@ -12,12 +12,12 @@
 
 const struct sensors_sensor sound_sensor;
 
-PERIODIC_RESOURCE(sound_resource, METHOD_GET, "sound", "title=\"sound sensor\";rt=\"Text\";obs", 13*CLOCK_SECOND);
+PERIODIC_RESOURCE(sound_resource, METHOD_GET, "sound", "title=\"sound sensor\";rt=\"Text\";obs", 3*CLOCK_SECOND);
 
 /*---------------------------------------------------------------------------*/
 
 long fxlog(long x) {
-  long t,y;
+  long t,y,i,f,j;
 
   y=0xa65af;
   if(x<0x00008000) x<<=16,              y-=0xb1721;
@@ -34,8 +34,14 @@ long fxlog(long x) {
   t=x+(x>>7); if((t&0x80000000)==0) x=t,y-=0x001fe;
   x=0x80000000-x;
   y-=x>>15;
-  return y >> 16;
+
+  i = y >> 16;
+  f = 0x0ffff & y;
+  for (j=f;j;j/=10) f = j;	
+  return i*10+f;
   }
+
+
 
 /*----------------------------------------------------------------------------*/
 
@@ -89,8 +95,9 @@ void sound_resource_periodic_handler(resource_t *r) {
 	static long ok_value;
 	char buffer[16];
 	long test = (((long) sensor_value(0))*125) >> 10;
-	ok_value = 10 + 16*fxlog(test << 16);
+	ok_value = 10 + 16*fxlog(test << 16)/10;
 	PRINTF("*** sound_resource_periodic_handler(): called!\n");
+	PRINTF("%lu", ok_value);
 	sprintf(buffer, "%ld", ok_value);
 	coap_packet_t notification[1];
 	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
