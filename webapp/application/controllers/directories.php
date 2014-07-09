@@ -118,9 +118,9 @@ class Directories extends CI_Controller {
 			if($n == "/") {
 				// Read whole resource directory
 				$rv = array(
-					array("n" => "/fan", "v" => 0.0, "u" => "", "rt" => "switch", "a" => "aaaa::1"),
-					array("n" => "/light", "v" => 0.0, "u" => "lux", "rt" => "dimmer", "a" => "aaaa::1"),
-					array("n" => "/accelerometer", "v" => 0.0, "u" => "m/s^2", "rt" => "sensor", "a" => "aaaa::2")
+					array("n" => "coap://localhost/fan", "v" => 0.0, "u" => "", "rt" => "switch", "a" => "localhost"),
+					array("n" => "coap://localhost/light", "v" => 0.0, "u" => "lux", "rt" => "dimmer", "a" => "localhost"),
+					array("n" => "coap://accelerometer", "v" => 0.0, "u" => "m/s^2", "rt" => "sensor", "a" => "localhost")
 				);
 			} else 
 				// Read just one value
@@ -133,6 +133,9 @@ class Directories extends CI_Controller {
 			$this->output->set_status_header('400'); // bad request
 			break;
 		}
+	}
+	
+	public function fake_board($id) {
 	}
 }
 

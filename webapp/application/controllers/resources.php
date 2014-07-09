@@ -3,8 +3,8 @@
 class Resources extends CI_Controller {
 
 	const IO_TIMEOUT = 10.0;	// Seconds to wait before network timeout
-	
-	private function __rpc($url, $method="GET", $user_agent="Mozilla (5.0)") {
+
+	private function __http_rpc($url, $method="GET", $user_agent="Mozilla (5.0)") {
 		$info = false;
 		$opts = array(
   			'http'=>array(
@@ -28,12 +28,28 @@ class Resources extends CI_Controller {
   		return $info;
 	}
 
+	private function __coap_rpc($url, $method="GET") {
+		$info = false;
+		exec(BASEPATH."../bin/coap-client -v7 -B2 -m ".$method." ".$url, $lines);
+		foreach($lines as $line) {
+			if(preg_match("/bytes from \\[(.+?)\\]/", $line, $matches)) {
+			}
+		}
+
+		if ($info != false && mb_detect_encoding($info, 'UTF-8', true) === false)
+    			$info = utf8_encode($info);
+  		return $info;
+	}
+
 	private function _restPut($path, $value) {
-		return $this->__rpc($path."?v=".$value, "PUT") !== false;
+		$rv = strpos($path, "coap:") == 0? $this->__coap_rpc($path."?v=".$value, "PUT") : 
+										  $this->__http_rpc($path."?v=".$value, "PUT");
+		return $rv !== false;
 	}
 	
 	private function _restGet($path) {
-		$rv = $this->__rpc($path);
+		$rv = strpos($path, "coap:") == 0? $this->__coap_rpc($path) :
+										  $this->__http_rpc($path);
 		return $rv == false? false : json_decode($rv);
 	}
 
@@ -44,11 +60,11 @@ class Resources extends CI_Controller {
 
 	private function getUrl($resource) {
 		$url = $resource->url;
-		if(strpos($url, "http:") !== 0) {
+		if(strpos($url, "http:") !== 0 && strpos($url, "coap:") !== 0) {
 			$board = $this->Board_model->get($resource->boardId);
 			$directory = $this->Directory_model->get($board->directoryId);
 			$url = $directory->url.$url;
-		}
+		} 
 		return $url;
 	}
 
@@ -140,39 +156,6 @@ class Resources extends CI_Controller {
 		$this->load->view("chart", array("resource" => $resource, "samples" =>$samples));
 	}
 	
-	public function notifier() {
-		// TODO
-	}
-	
-	public function fake_rd() {
-		$method = strtoupper($this->input->server('REQUEST_METHOD'));
-		switch($method) {
-		case 'PUT':
-			// Update resource value
-			$value = (float) $this->input->get('v', TRUE);
-			$this->output->set_status_header('204'); // no content
-			break;
-		case 'GET':
-			$n = "/".join("/", func_get_args());
-			if($n == "/") {
-				// Read whole resource directory
-				$rv = array(
-					array("n" => "/fan", "v" => 0.0, "u" => "", "rt" => "switch"),
-					array("n" => "/light", "v" => 0.0, "u" => "lux", "rt" => "dimmer"),
-					array("n" => "/accelerometer", "v" => 0.0, "u" => "m/s^2", "rt" => "sensor")
-				);
-			} else 
-				// Read just one value
-				$rv = array("n" => $n, "v" => 0.5);
-			$this->output->set_content_type('application/json')
-						 ->set_status_header('200') // ok
-						 ->set_output(json_encode($rv));
-			break;
-		default:
-			$this->output->set_status_header('400'); // bad request
-			break;
-		}
-	}
 }
 
 /* End of file resource.php */
