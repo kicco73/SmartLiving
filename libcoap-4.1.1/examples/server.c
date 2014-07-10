@@ -39,7 +39,12 @@ static int quit = 0;
 /* changeable clock base (see handle_put_time()) */
 static time_t my_clock_base = 0;
 
-struct coap_resource_t *time_resource = NULL;
+struct coap_resource_t *accelerometer_resource = NULL;
+struct coap_resource_t *dimmer_resource = NULL;
+struct coap_resource_t *fan_resource = NULL;
+
+static int dimmer_value = 0;
+static int fan_value = 0;
 
 #ifndef WITHOUT_ASYNC
 /* This variable is used to mimic long-running tasks that require
@@ -52,6 +57,52 @@ void
 handle_sigint(int signum) {
   quit = 1;
 }
+
+
+int
+parse_param(unsigned char *search, size_t search_len,
+	    unsigned char *data, size_t data_len, str *result) {
+
+  if (result)
+    memset(result, 0, sizeof(str));
+
+  if (!search_len) 
+    return 0;
+  
+  while (search_len <= data_len) {
+
+    /* handle parameter if found */
+    if (memcmp(search, data, search_len) == 0) {
+      data += search_len;
+      data_len -= search_len;
+
+      /* key is only valid if we are at end of string or delimiter follows */
+      if (!data_len || *data == '=' || *data == '&') {
+	while (data_len && *data != '=') {
+	  ++data; --data_len;
+	}
+      
+	if (data_len > 1 && result) {
+	  /* value begins after '=' */
+	  
+	  result->s = ++data;
+	  while (--data_len && *data != '&') {
+	    ++data; result->length++;
+	  }
+	}
+	
+	return 1;
+      }
+    }
+
+    /* otherwise proceed to next */
+    while (--data_len && *data++ != '&')
+      ;
+  }
+  
+  return 0;
+}
+
 
 #define INDEX "This is a test server made with libcoap (see http://libcoap.sf.net)\n" \
    	      "Copyright (C) 2010--2013 Olaf Bergmann <bergmann@tzi.org>\n\n"
@@ -74,7 +125,7 @@ hnd_get_index(coap_context_t  *ctx, struct coap_resource_t *resource,
 }
 
 void 
-hnd_get_time(coap_context_t  *ctx, struct coap_resource_t *resource, 
+hnd_get_dimmer(coap_context_t  *ctx, struct coap_resource_t *resource, 
 	     coap_address_t *peer, coap_pdu_t *request, str *token,
 	     coap_pdu_t *response) {
   coap_opt_iterator_t opt_iter;
@@ -85,12 +136,8 @@ hnd_get_time(coap_context_t  *ctx, struct coap_resource_t *resource,
   coap_tick_t t;
   coap_subscription_t *subscription;
 
-  /* FIXME: return time, e.g. in human-readable by default and ticks
-   * when query ?ticks is given. */
-
   /* if my_clock_base was deleted, we pretend to have no such resource */
-  response->hdr->code = 
-    my_clock_base ? COAP_RESPONSE_CODE(205) : COAP_RESPONSE_CODE(404);
+  response->hdr->code = COAP_RESPONSE_CODE(205);
 
   if (request != NULL &&
       coap_check_option(request, COAP_OPTION_OBSERVE, &opt_iter)) {
@@ -105,80 +152,129 @@ hnd_get_time(coap_context_t  *ctx, struct coap_resource_t *resource,
 		    coap_encode_var_bytes(buf, ctx->observe), buf);
 
     
-  if (my_clock_base)
-    coap_add_option(response, COAP_OPTION_CONTENT_FORMAT,
+  coap_add_option(response, COAP_OPTION_CONTENT_FORMAT,
+		    coap_encode_var_bytes(buf, COAP_MEDIATYPE_APPLICATION_JSON), buf);
+
+  coap_add_option(response, COAP_OPTION_MAXAGE,
+	  coap_encode_var_bytes(buf, 0x01), buf);
+
+  snprintf((char*)buf, min(sizeof(buf), response->max_size - response->length), "{\"v\":%d}", dimmer_value);
+  len = strlen((char*)buf);
+  coap_add_data(response, len, buf);
+}
+
+void 
+hnd_put_dimmer(coap_context_t  *ctx, struct coap_resource_t *resource, 
+	     coap_address_t *peer, coap_pdu_t *request, str *token,
+	     coap_pdu_t *response) {
+  size_t size;
+  unsigned char *data;
+  coap_opt_t *query;
+  coap_opt_iterator_t opt_iter;
+  str v = {0, NULL};
+  response->hdr->code = COAP_RESPONSE_CODE(204);
+  resource->dirty = 1;
+  coap_get_data(request, &size, &data);
+  query = coap_check_option(request, COAP_OPTION_URI_QUERY, &opt_iter);
+  if (query)
+    parse_param((unsigned char *)"v", 1, 
+		COAP_OPT_VALUE(query), COAP_OPT_LENGTH(query), &v);
+  if (v.length)
+    dimmer_value = atoi(v.s);
+}
+
+void 
+hnd_get_fan(coap_context_t  *ctx, struct coap_resource_t *resource, 
+	     coap_address_t *peer, coap_pdu_t *request, str *token,
+	     coap_pdu_t *response) {
+  coap_opt_iterator_t opt_iter;
+  coap_opt_t *option;
+  unsigned char buf[40];
+  size_t len;
+  time_t now;
+  coap_tick_t t;
+  coap_subscription_t *subscription;
+
+  response->hdr->code = COAP_RESPONSE_CODE(205);
+
+  if (request != NULL &&
+      coap_check_option(request, COAP_OPTION_OBSERVE, &opt_iter)) {
+    subscription = coap_add_observer(resource, peer, token);
+    if (subscription) {
+      subscription->non = request->hdr->type == COAP_MESSAGE_NON;
+      coap_add_option(response, COAP_OPTION_OBSERVE, 0, NULL);
+    }
+  }
+  if (resource->dirty == 1)
+    coap_add_option(response, COAP_OPTION_OBSERVE, 
+		    coap_encode_var_bytes(buf, ctx->observe), buf);
+
+  coap_add_option(response, COAP_OPTION_CONTENT_FORMAT,
+		    coap_encode_var_bytes(buf, COAP_MEDIATYPE_APPLICATION_JSON), buf);
+
+  coap_add_option(response, COAP_OPTION_MAXAGE,
+	  coap_encode_var_bytes(buf, 0x01), buf);
+
+  snprintf((char*)buf, min(sizeof(buf), response->max_size - response->length), "{\"v\":%d}", fan_value);
+  len = strlen((char*)buf);
+  coap_add_data(response, len, buf);
+}
+
+void 
+hnd_put_fan(coap_context_t  *ctx, struct coap_resource_t *resource, 
+	     coap_address_t *peer, coap_pdu_t *request, str *token,
+	     coap_pdu_t *response) {
+  size_t size;
+  unsigned char *data;
+  coap_opt_t *query;
+  coap_opt_iterator_t opt_iter;
+  str v = {0, NULL};
+  response->hdr->code = COAP_RESPONSE_CODE(204);
+  resource->dirty = 1;
+  coap_get_data(request, &size, &data);
+  query = coap_check_option(request, COAP_OPTION_URI_QUERY, &opt_iter);
+  if (query)
+    parse_param((unsigned char *)"v", 1, 
+		COAP_OPT_VALUE(query), COAP_OPT_LENGTH(query), &v);
+  if (v.length)
+    fan_value = atoi(v.s);
+}
+
+void 
+hnd_get_accelerometer(coap_context_t  *ctx, struct coap_resource_t *resource, 
+	     coap_address_t *peer, coap_pdu_t *request, str *token,
+	     coap_pdu_t *response) {
+  coap_opt_iterator_t opt_iter;
+  coap_opt_t *option;
+  unsigned char buf[40];
+  size_t len;
+  time_t now;
+  coap_tick_t t;
+  coap_subscription_t *subscription;
+
+  /* if my_clock_base was deleted, we pretend to have no such resource */
+  response->hdr->code = COAP_RESPONSE_CODE(205);
+  if (request != NULL &&
+      coap_check_option(request, COAP_OPTION_OBSERVE, &opt_iter)) {
+    subscription = coap_add_observer(resource, peer, token);
+    if (subscription) {
+      subscription->non = request->hdr->type == COAP_MESSAGE_NON;
+      coap_add_option(response, COAP_OPTION_OBSERVE, 0, NULL);
+    }
+  }
+  if (resource->dirty == 1)
+    coap_add_option(response, COAP_OPTION_OBSERVE, 
+		    coap_encode_var_bytes(buf, ctx->observe), buf);
+
+  coap_add_option(response, COAP_OPTION_CONTENT_FORMAT,
 		    coap_encode_var_bytes(buf, COAP_MEDIATYPE_TEXT_PLAIN), buf);
 
   coap_add_option(response, COAP_OPTION_MAXAGE,
 	  coap_encode_var_bytes(buf, 0x01), buf);
 
-  if (my_clock_base) {
-
-    /* calculate current time */
-    coap_ticks(&t);
-    now = my_clock_base + (t / COAP_TICKS_PER_SECOND);
-    
-    if (request != NULL
-	&& (option = coap_check_option(request, COAP_OPTION_URI_QUERY, &opt_iter))
-	&& memcmp(COAP_OPT_VALUE(option), "ticks",
-		  min(5, COAP_OPT_LENGTH(option))) == 0) {
-      /* output ticks */
-      len = snprintf((char *)buf, 
-	   min(sizeof(buf), response->max_size - response->length),
-		     "%u", (unsigned int)now);
+  snprintf((char*)buf, min(sizeof(buf), response->max_size - response->length), "{\"v\":%.2f}", 0.55);
+      len = strlen((char*)buf);
       coap_add_data(response, len, buf);
-
-    } else {			/* output human-readable time */
-      struct tm *tmp;
-      tmp = gmtime(&now);
-      len = strftime((char *)buf, 
-		     min(sizeof(buf), response->max_size - response->length),
-		     "%b %d %H:%M:%S", tmp);
-      coap_add_data(response, len, buf);
-    }
-  }
-}
-
-void 
-hnd_put_time(coap_context_t  *ctx, struct coap_resource_t *resource, 
-	     coap_address_t *peer, coap_pdu_t *request, str *token,
-	     coap_pdu_t *response) {
-  coap_tick_t t;
-  size_t size;
-  unsigned char *data;
-
-  /* FIXME: re-set my_clock_base to clock_offset if my_clock_base == 0
-   * and request is empty. When not empty, set to value in request payload
-   * (insist on query ?ticks). Return Created or Ok.
-   */
-
-  /* if my_clock_base was deleted, we pretend to have no such resource */
-  response->hdr->code = 
-    my_clock_base ? COAP_RESPONSE_CODE(204) : COAP_RESPONSE_CODE(201);
-
-  resource->dirty = 1;
-
-  coap_get_data(request, &size, &data);
-  
-  if (size == 0)		/* re-init */
-    my_clock_base = clock_offset;
-  else {
-    my_clock_base = 0;
-    coap_ticks(&t);
-    while(size--) 
-      my_clock_base = my_clock_base * 10 + *data++;
-    my_clock_base -= t / COAP_TICKS_PER_SECOND;
-  }
-}
-
-void 
-hnd_delete_time(coap_context_t  *ctx, struct coap_resource_t *resource, 
-	      coap_address_t *peer, coap_pdu_t *request, str *token,
-	      coap_pdu_t *response) {
-  my_clock_base = 0;		/* mark clock as "deleted" */
-  
-  /* type = request->hdr->type == COAP_MESSAGE_CON  */
-  /*   ? COAP_MESSAGE_ACK : COAP_MESSAGE_NON; */
 }
 
 #ifndef WITHOUT_ASYNC
@@ -267,10 +363,10 @@ init_resources(coap_context_t *ctx) {
   /* store clock base to use in /time */
   my_clock_base = clock_offset;
 
-  r = coap_resource_init((unsigned char *)"time", 4, 0);
-  coap_register_handler(r, COAP_REQUEST_GET, hnd_get_time);
-  coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_time);
-  coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_time);
+  r = coap_resource_init((unsigned char *)"accelerometer", strlen("accelerometer"), 0);
+  coap_register_handler(r, COAP_REQUEST_GET, hnd_get_accelerometer);
+  //coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_accelerometer);
+  //coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_accelerometer);
 
   coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
   coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"Internal Clock\"", 16, 0);
@@ -279,7 +375,35 @@ init_resources(coap_context_t *ctx) {
   coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"\"clock\"", 7, 0);
 
   coap_add_resource(ctx, r);
-  time_resource = r;
+  accelerometer_resource = r;
+
+  r = coap_resource_init((unsigned char *)"fan", strlen("fan"), 0);
+  coap_register_handler(r, COAP_REQUEST_GET, hnd_get_fan);
+  coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_fan);
+  //coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_accelerometer);
+
+  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
+  coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"Internal Clock\"", 16, 0);
+  coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"Ticks\"", 7, 0);
+  r->observable = 0;
+  coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"\"clock\"", 7, 0);
+
+  coap_add_resource(ctx, r);
+  fan_resource = r;
+
+  r = coap_resource_init((unsigned char *)"dimmer", strlen("dimmer"), 0);
+  coap_register_handler(r, COAP_REQUEST_GET, hnd_get_dimmer);
+  coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_dimmer);
+  //coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_accelerometer);
+
+  coap_add_attr(r, (unsigned char *)"ct", 2, (unsigned char *)"0", 1, 0);
+  coap_add_attr(r, (unsigned char *)"title", 5, (unsigned char *)"\"Internal Clock\"", 16, 0);
+  coap_add_attr(r, (unsigned char *)"rt", 2, (unsigned char *)"\"Ticks\"", 7, 0);
+  r->observable = 0;
+  coap_add_attr(r, (unsigned char *)"if", 2, (unsigned char *)"\"clock\"", 7, 0);
+
+  coap_add_resource(ctx, r);
+  dimmer_resource = r;
 
 #ifndef WITHOUT_ASYNC
   r = coap_resource_init((unsigned char *)"async", 5, 0);
@@ -424,8 +548,8 @@ main(int argc, char **argv) {
 	coap_dispatch( ctx );	/* and dispatch PDUs from receivequeue */
       }
     } else {			/* timeout */
-      if (time_resource) {
-	time_resource->dirty = 1;
+      if (accelerometer_resource) {
+	accelerometer_resource->dirty = 1;
       }
     }
 

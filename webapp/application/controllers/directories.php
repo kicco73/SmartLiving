@@ -120,7 +120,7 @@ class Directories extends CI_Controller {
 				$rv = array(
 					array("n" => "coap://localhost/fan", "v" => 0.0, "u" => "", "rt" => "switch", "a" => "localhost"),
 					array("n" => "coap://localhost/light", "v" => 0.0, "u" => "lux", "rt" => "dimmer", "a" => "localhost"),
-					array("n" => "coap://accelerometer", "v" => 0.0, "u" => "m/s^2", "rt" => "sensor", "a" => "localhost")
+					array("n" => "coap://localhost/accelerometer", "v" => 0.0, "u" => "m/s^2", "rt" => "sensor", "a" => "localhost")
 				);
 			} else 
 				// Read just one value

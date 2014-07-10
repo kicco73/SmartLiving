@@ -30,10 +30,12 @@ class Resources extends CI_Controller {
 
 	private function __coap_rpc($url, $method="GET") {
 		$info = false;
-		exec(BASEPATH."../bin/coap-client -v7 -B2 -m ".$method." ".$url, $lines);
+		exec(BASEPATH."../bin/coap-client -v0 -B2 -m ".$method.' "'.$url.'"', $lines);
+
 		foreach($lines as $line) {
-			if(preg_match("/bytes from \\[(.+?)\\]/", $line, $matches)) {
-			}
+			if(!preg_match("/^v:/", $line, $matches)) {
+				$info = $line;
+			} else $info = "";
 		}
 
 		if ($info != false && mb_detect_encoding($info, 'UTF-8', true) === false)
@@ -50,7 +52,12 @@ class Resources extends CI_Controller {
 	private function _restGet($path) {
 		$rv = strpos($path, "coap:") == 0? $this->__coap_rpc($path) :
 										  $this->__http_rpc($path);
-		return $rv == false? false : json_decode($rv);
+		if($rv == false)
+			return false;
+		$rv = json_decode($rv);
+		if(is_numeric($rv))
+			$rv = array('v' => $rv);
+		return $rv;
 	}
 
 	public function index() {
@@ -106,8 +113,8 @@ class Resources extends CI_Controller {
 			$resource = $this->Resource_model->get($resource->id);
 			$this->output->set_content_type('application/json')->set_output(json_encode($resource));
 		} else {
-			log_message('error', 'resource directory unreachable');
-			$this->output->set_status_header('500', $resource->url.': resource directory unreachable');
+			log_message('error', $url.'resource directory unreachable');
+			$this->output->set_status_header('500', $url.': resource directory unreachable');
 		}
 	}
 	
@@ -116,7 +123,7 @@ class Resources extends CI_Controller {
 		switch($method) {
 		case 'post':
 			$input_data = trim(file_get_contents('php://input'));
-			log_message('error', 'input data '.$input_data);
+			//log_message('error', 'input data '.$input_data);
 			$input_data = json_decode($input_data);
 			if($input_data) {
 				foreach($input_data as $r) {
