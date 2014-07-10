@@ -23,8 +23,8 @@ upload: chmod server.upload
 board1: drivers/motion.o
 	make TARGET=z1 SENSORS="$(SENSORS) -DWITH_MOTION_SENSOR -Wl,../drivers/motion.o" -C rd
 
-board22: drivers/sound.o drivers/fan.o 
-	make TARGET=z1 SENSORS="$(SENSORS) -DWITH_SOUND_SENSOR -Wl,drivers/sound.o -DWITH_FAN_SENSOR -Wl,drivers/fan.o" all
+board22: drivers/light.o
+	make TARGET=z1 SENSORS="$(SENSORS) -DWITH_LIGHT_SENSOR -Wl,drivers/light.o" all
 
 board2: drivers/sound.o drivers/fan.o drivers/light.o drivers/temp.o
 	make TARGET=z1 SENSORS="$(SENSORS) -DWITH_SOUND_SENSOR -Wl,drivers/sound.o -DWITH_FAN_SENSOR -Wl,drivers/fan.o -DWITH_LIGHT_SENSOR -Wl,drivers/light.o -DWITH_TEMP_SENSOR -Wl,drivers/temp.o" all

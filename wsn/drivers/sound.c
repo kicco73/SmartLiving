@@ -17,7 +17,7 @@ PERIODIC_RESOURCE(sound_resource, METHOD_GET, "sound", "title=\"sound sensor\";r
 /*---------------------------------------------------------------------------*/
 
 long fxlog(long x) {
-  long t,y,i,f,j;
+  long t,y,k,i,f,j;
 
   y=0xa65af;
   if(x<0x00008000) x<<=16,              y-=0xb1721;
@@ -37,8 +37,11 @@ long fxlog(long x) {
 
   i = y >> 16;
   f = 0x0ffff & y;
-  for (j=f;j;j/=10) f = j;	
-  return i*10+f;
+  for (j=f=k;j;j/=10) {
+	k = f;
+	f = j;
+  }
+  return i*100+k;
   }
 
 
@@ -92,13 +95,14 @@ void sound_resource_handler(void* request, void* response, uint8_t *buffer, uint
 /*---------------------------------------------------------------------------*/
 void sound_resource_periodic_handler(resource_t *r) {
 	static int event_counter;
-	static long ok_value;
+	static int ok_value;
 	char buffer[16];
-	long test = (((long) sensor_value(0))*125) >> 10;
-	ok_value = 10 + 16*fxlog(test << 16)/10;
+	long test = (((long) sensor_value(0))*1000) >> 13;
+	//ok_value = 10 + 16*(fxlog(test << 16)/100);
 	PRINTF("*** sound_resource_periodic_handler(): called!\n");
-	PRINTF("%lu", ok_value);
-	sprintf(buffer, "%ld", ok_value);
+	//PRINTF("%lu", ok_value);
+	printf("test %ld\n",test);
+	sprintf(buffer, "%ld", test);
 	coap_packet_t notification[1];
 	coap_init_message(notification, COAP_TYPE_NON, REST.status.OK, 0);
 	coap_set_payload(notification, buffer, strlen(buffer)+1);
@@ -115,7 +119,7 @@ SENSORS_SENSOR(sound_sensor, "sound sensor", sensor_value, sensor_configure, sen
 struct Driver SOUND_DRIVER = {
 	.name = "sound",
 	.description = "sound sensor",
-	.unit = "dB",
+	.unit = "Vx200",
 	.type = "sensor",
 	.init = sensor_init, 
 };

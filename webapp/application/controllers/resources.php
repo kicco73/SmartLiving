@@ -28,23 +28,31 @@ class Resources extends CI_Controller {
   		return $info;
 	}
 
-	private function __coap_rpc($url, $method="GET") {
+	private function __coap_rpc($url, $method="GET", $value=null) {
 		$info = false;
-		exec(BASEPATH."../bin/coap-client -v0 -B2 -m ".$method.' "'.$url.'"', $lines);
-
-		foreach($lines as $line) {
-			if(!preg_match("/^v:/", $line, $matches)) {
-				$info = $line;
-			} else $info = "";
-		}
-
+		$descriptorspec = array(
+  			0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+   			1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+   			2 => array("file", "/dev/null", "a") // stderr is a file to write to
+		);
+		$process = proc_open(BASEPATH."../bin/coap-client -v0 -B2 -f- -m ".$method.' "'.$url.'"', $descriptorspec, $pipes);
+		if($value != null)
+			fwrite($pipes[0], $value);
+		fclose($pipes[0]);
+		$lines = stream_get_contents($pipes[1]);
+		fclose($pipes[1]);
+		proc_close($process);
+		$line = trim($lines);
+		if(preg_match("/\n(.*)$/", $line, $matches))
+			$info = $matches[1];
+		else $info = "";
 		if ($info != false && mb_detect_encoding($info, 'UTF-8', true) === false)
     			$info = utf8_encode($info);
   		return $info;
 	}
 
 	private function _restPut($path, $value) {
-		$rv = strpos($path, "coap:") == 0? $this->__coap_rpc($path."?v=".$value, "PUT") : 
+		$rv = strpos($path, "coap:") == 0? $this->__coap_rpc($path, "PUT", "v=".$value) : 
 										  $this->__http_rpc($path."?v=".$value, "PUT");
 		return $rv !== false;
 	}
@@ -55,8 +63,11 @@ class Resources extends CI_Controller {
 		if($rv == false)
 			return false;
 		$rv = json_decode($rv);
-		if(is_numeric($rv))
-			$rv = array('v' => $rv);
+		if(is_numeric($rv)) {
+			$v = $rv;
+			$rv = new stdClass();
+			$rv->v = $v;
+		}
 		return $rv;
 	}
 
@@ -113,7 +124,7 @@ class Resources extends CI_Controller {
 			$resource = $this->Resource_model->get($resource->id);
 			$this->output->set_content_type('application/json')->set_output(json_encode($resource));
 		} else {
-			log_message('error', $url.'resource directory unreachable');
+			log_message('error', $url.': resource directory unreachable');
 			$this->output->set_status_header('500', $url.': resource directory unreachable');
 		}
 	}

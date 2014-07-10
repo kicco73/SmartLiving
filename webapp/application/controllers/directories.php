@@ -49,7 +49,7 @@ class Directories extends CI_Controller {
 		if($rv != false) {
 			foreach($rv as $r) {
 				$board = $this->Board_model->insert_or_update_by_directory_and_url($id, $r->a);
-				$this->Resource_model->insert_or_update_by_board_and_url($board->id, $r->n, $r->v, $r->u, $r->rt);
+				$this->Resource_model->insert_or_update_by_board_and_url($board->id, 'coap://['.$r->a.']'.$r->n, $r->v, $r->u, $r->rt);
 			}
 			$boards = $this->Board_model->list_by_directory($id);
 			$this->load->view('ajax_list_resources', array("boards" => $boards));
