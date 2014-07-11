@@ -43,8 +43,6 @@
 			</tbody>			
 		</table>
 <?php } ?>
-</div>
-
 <script>
 
 $(document).ready(function() {
@@ -73,3 +71,5 @@ $(document).ready(function() {
 });
 
 </script>
+</div>
+
