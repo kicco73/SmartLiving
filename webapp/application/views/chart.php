@@ -9,14 +9,15 @@
         var data = google.visualization.arrayToDataTable([
           ['Time', '[<?php echo $resource->unit;?>]']
           <?php
-          	foreach($samples as $sample) 
-          		echo ",['".$sample->timeStamp."', ".$sample->value."]";
+          	foreach($samples as $sample) {
+			list ($y,$x) = explode(" ",(string)($sample->timeStamp));
+          		echo ",['".$x."', ".$sample->value."]";
+		}
           ?>
         ]);
 
         var options = {
           title: '<?php echo $resource->description; ?> ',
-          curveType: 'function',
 	      legend: { position: 'bottom' }
         };
 

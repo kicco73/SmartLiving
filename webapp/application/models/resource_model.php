@@ -30,7 +30,10 @@ class Resource_model extends CI_Model {
 	}
 		
 	function list_all_samples($id) {
-		return $this->db->where("resourceId", $id)->get("Sample")->result();
+		return array_reverse($this->db->where("resourceId", $id)
+			->order_by("id", "desc")
+			->get("Sample", 2000, 0)
+			->result());
 	}
 	
 	function add_sample($url, $value) {
