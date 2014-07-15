@@ -1,7 +1,7 @@
 <div class="boards">
 <?php foreach($boards as $board) { ?>
 		<h3>Board: <?php echo $board->url; ?></h3>
-		<table class="new resources">
+		<table id="board<?php echo $board->id; ?>" class="resources">
 			<thead>
 				<th class="value"></th>
 				<th class="name">Name</th>
@@ -42,23 +42,24 @@
 
 			</tbody>			
 		</table>
-<?php } ?>
 <script>
 
 $(document).ready(function() {
-	$(".new .switch").click(resource.ajaxSwitchToggle);
-	$(".new .dimmer").slider({min: 0, max: 100, step:1,  change: resource.ajaxDimmerChange}).each(function() {
+	var board = $("#board<?php echo $board->id; ?>");
+	board.find(".switch").click(resource.ajaxSwitchToggle);
+	board.find(".dimmer").slider({min: 0, max: 100, step:1,  change: resource.ajaxDimmerChange}).each(function() {
 		$(this).slider("value", $(this).attr("data"));
 	});
-	$(".new .dimmer a").focus(observe.pause).blur(observe.run);
-	$(".new .sensor").click(resource.ajaxSensorRefresh);
-	$(".new .remove").click(resource.ajaxRemove);
-	$(".new .editable")
+	board.find(".dimmer a").focus(observe.pause).blur(observe.run);
+	board.find(".sensor").click(resource.ajaxSensorRefresh);
+	board.find(".remove").click(resource.ajaxRemove);
+	board.find(".editable")
 		.editable(resource.ajaxSet)
 		.click(observe.pause)
 		.blur(observe.run);
-	$("a.chart").fancybox({
+	$("#board<?php echo $board->id; ?> a.chart").off().fancybox({
 		type : 'iframe',
+		live: false,
     	openEffect	: 'elastic',
     	closeEffect	: 'elastic',
     	helpers : {
@@ -67,9 +68,9 @@ $(document).ready(function() {
     		}
     	}
     });
-    $(".new").toggleClass("new");
 });
 
 </script>
+<?php } ?>
 </div>
 
